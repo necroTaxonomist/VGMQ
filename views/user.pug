@@ -1,0 +1,61 @@
+extends layout
+
+block content
+  a(href="/main") Back to main page
+  br
+  a(href="/users") Back to users
+
+  h2 User: #{user.username}
+
+  p
+  | Wins: #{user.wins}
+  br
+  | Experience Points: #{user.exp}
+
+  h3 Library (#{user.num_games})
+
+  if user.username == currentusername
+    form(action="/users/" + currentusername + "/add" method="POST" autocomplete="off")
+      p
+        div(class="autocomplete")
+          input(id="gamesearch" name="game_name" type="text" required placeholder="Search Games...")
+        input(name="source_url" type="hidden" value="/users/" + currentusername)
+        button(type="submit") Add Game
+  
+  if errortext
+    p(style={color: 'red'}) #{errortext}
+
+  ul
+    each game in gamenames
+      li(class="gameitem")
+        if user.username == currentusername
+          input(class="checkmark" type="checkbox" checked=true name=game)
+        a(href="/games/" + game) #{game}
+
+  form(id="removeform" action="/users/" + currentusername + "/remove" method="POST")
+    input(name="game_name" type="hidden" id="removegamename")
+    input(name="source_url" type="hidden" value="/users/" + currentusername)
+
+  script.
+    var removeform = document.getElementById("removeform");
+    var removegamename = document.getElementById("removegamename");
+    var items = document.getElementsByClassName("gameitem");
+
+    for (item of items)
+    {
+      var checkmark = item.getElementsByClassName("checkmark")[0];
+
+      if (checkmark)
+      {
+        checkmark.onclick = function()
+        {
+          removegamename.value = this.name;
+          removeform.submit();
+        }
+      }
+    }
+  
+  script(src="/javascript/searchgames.js")
+
+  script.
+    autocomplete(document.getElementById("gamesearch"));

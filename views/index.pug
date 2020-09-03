@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  p
+  form(action="/login" method="POST")
+    input(name="username" type="text" required placeholder="Username")
+    input(name="password" type="password" required placeholder="Password")
+    button(type="submit") Login
+
+  if errortext
+    p(style={color: 'red'}) #{errortext}
+
+  p
+  a(class='button' href="/signup") New User

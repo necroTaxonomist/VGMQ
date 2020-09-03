@@ -1,0 +1,63 @@
+extends layout
+
+block content
+  a(href="/main") Back to main page
+
+  h2 All Games (#{games.length})
+
+  form(action="/games/add" method="POST")
+    p
+      input(name="game_name" type="text" required placeholder="Game Name")
+      input(name="playlist_url" type="text" required placeholder="YouTube Playlist URL")
+      input(name="source_url" type="hidden" value="/games")
+      button(type="submit") Add Game
+      input(name="addtouser" type="checkbox" checked)
+      | Add to my library
+
+  if errortext
+    p(style={color: 'red'}) #{errortext}
+
+  ul
+    each game in games
+      li(class="gameitem")
+        input(class="checkmark" type="checkbox" checked=currentuser.games.includes(game._id) name=game.game_name)
+        a(href="/games/" + game.game_name) #{game.game_name}
+
+  form(id="addform" action="/users/" + currentuser.username + "/add" method="POST")
+    input(name="game_name" type="hidden" id="addgamename")
+    input(name="source_url" type="hidden" value="/games")
+
+  form(id="removeform" action="/users/" + currentuser.username + "/remove" method="POST")
+    input(name="game_name" type="hidden" id="removegamename")
+    input(name="source_url" type="hidden" value="/games")
+
+  script.
+    var addform = document.getElementById("addform");
+    var addgamename = document.getElementById("addgamename");
+
+    var removeform = document.getElementById("removeform");
+    var removegamename = document.getElementById("removegamename");
+
+    var items = document.getElementsByClassName("gameitem");
+
+    for (item of items)
+    {
+      var checkmark = item.getElementsByClassName("checkmark")[0];
+
+      if (checkmark)
+      {
+        checkmark.onclick = function()
+        {
+          if (this.checked)
+          {
+            addgamename.value = this.name;
+            addform.submit();
+          }
+          else
+          {
+            removegamename.value = this.name;
+            removeform.submit();
+          }
+        }
+      }
+    }

@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  a(href="/main") Back to main page
+
+  h2 Users
+
+  ul
+    each username in usernames
+      li
+        a(href="/users/" + username) #{username}

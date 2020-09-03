@@ -1,0 +1,34 @@
+extends layout
+
+block content
+  a(href="/main") Back to main page
+  br
+  a(href="/games") Back to all games
+  br
+  a(href="/games") Back to my games library
+
+  h2 Game: #{game.game_name}
+
+  if currentuser.games.includes(game._id)
+    form(action="/users/" + currentuser.username + "/remove" method="POST")
+      input(name="game_name" type="hidden" value=game.game_name)
+      input(name="source_url" type="hidden" value="/games/" + game.game_name)
+      button(type="submit") Remove from my library
+  else
+    form(action="/users/" + currentuser.username + "/add" method="POST")
+      input(name="game_name" type="hidden" value=game.game_name)
+      input(name="source_url" type="hidden" value="/games/" + game.game_name)
+      button(type="submit") Add to my library
+
+  h3 Songs (#{playlist.songs.length})
+
+  p
+  | Playlist Title: #{playlist.title}
+  br
+  | URL: 
+  a(href="https://www.youtube.com/playlist?list=" + playlist.id) https://www.youtube.com/playlist?list=#{playlist.id}
+
+  ol
+    each song in playlist.songs
+      li
+        a(href="https://www.youtube.com/watch?v=" + song.id + "&list=" + playlist.id) #{song.title}

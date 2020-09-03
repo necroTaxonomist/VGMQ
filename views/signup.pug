@@ -1,0 +1,25 @@
+extends layout
+
+block content
+  h2 Create a New User
+
+  form(action="/signup" method="POST")
+    p
+    | Username
+    br
+    input(name="username" type="text" required placeholder="Username")
+
+    p
+    | Password (I'm literally storing plaintext passwords btw)
+    br
+    input(name="password" type="password" required placeholder="Password")
+    input(name="repeat_password" type="password" required placeholder="Repeat Password")
+
+    p
+    button(type="submit") Register
+
+  if errortext
+    p(style={color: 'red'}) #{errortext}
+
+  p
+  a(class='button' href="/") Already have a user
