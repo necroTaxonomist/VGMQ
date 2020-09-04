@@ -5,9 +5,10 @@ block content
 
   h2 All Games (#{games.length})
 
-  form(action="/games/add" method="POST")
+  form(action="/games/add" method="POST" autocomplete="off")
     p
-      input(name="game_name" type="text" required placeholder="Game Name")
+      div(class="autocomplete")
+          input(id="gamesearch" name="game_name" type="text" required placeholder="Game Name")
       input(name="playlist_url" type="text" required placeholder="YouTube Playlist URL")
       input(name="source_url" type="hidden" value="/games")
       button(type="submit") Add Game
@@ -61,3 +62,8 @@ block content
         }
       }
     }
+  
+  script(src="/javascript/searchgames.js")
+
+  script.
+    autocomplete(document.getElementById("gamesearch"));

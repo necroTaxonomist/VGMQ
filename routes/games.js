@@ -74,7 +74,7 @@ async function gamePage(req, res, next)
             if (req.query.num)
                 num = parseInt(req.query.num);
             else
-                num = 3;
+                num = 5;
 
             res.json(await gamesdb.searchNames(search, num));
         }
