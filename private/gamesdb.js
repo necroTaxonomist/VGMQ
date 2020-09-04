@@ -35,6 +35,19 @@ var gameSchema = new mongoose.Schema(
     },
     { collection: 'games' }
 );
+gameSchema.virtual('norm_game_name').get(function()
+    {
+        var str = this.game_name.toLowerCase();
+        const the = 'the ';
+
+        if (str.search(the) == 0)
+        {
+            str = str.substring(the.length);
+        }
+
+        return str;
+    }
+);
 
 // User Model
 var gameModel = mongoose.model('game', gameSchema);
@@ -77,14 +90,14 @@ function remove(name)
 // Returns a Query
 function all()
 {
-    return gameModel.find({}).sort('game_name');
+    return gameModel.find({}).sort('norm_game_name');
 }
 
 // Get all game names
 // Returns a Promise
 async function allNames()
 {
-    const query = await gameModel.find({}).sort('game_name');
+    const query = await gameModel.find({}).sort('norm_game_name');
     var names = [];
 
     for await (const game of query)
@@ -108,7 +121,7 @@ async function idsToNames(ids)
                 $in: id_objects
             }
         }
-    ).sort('game_name');
+    ).sort('norm_game_name');
 
     var names = [];
 
