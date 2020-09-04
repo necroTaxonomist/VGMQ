@@ -40,7 +40,7 @@ var gameSchema = new mongoose.Schema(
 var gameModel = mongoose.model('game', gameSchema);
 
 // Create a new game
-// Returns a Promise, may throw an error
+// Returns a Query
 function create(name, playlist_id)
 {
     return gameModel.create(
@@ -52,25 +52,36 @@ function create(name, playlist_id)
 }
 
 // Get the game with the given name
-// Returns a Promise, may throw an error
+// Returns a Query
 function get(name)
 {
     return gameModel.findOne(
         {
             game_name: name
         }
-    ).exec();
+    );
+}
+
+// Remove the game with the given name
+// Returns a Query
+function remove(name)
+{
+    return gameModel.deleteOne(
+        {
+            game_name: name
+        }
+    );
 }
 
 // Gets all games
-// Returns a Promise, may throw an error
+// Returns a Query
 function all()
 {
-    return gameModel.find({}).sort('game_name').exec();
+    return gameModel.find({}).sort('game_name');
 }
 
 // Get all game names
-// Returns a Promise, may throw an error
+// Returns a Promise
 async function allNames()
 {
     const query = await gameModel.find({}).sort('game_name');
@@ -85,6 +96,7 @@ async function allNames()
 }
 
 // Converts a list of game IDs to game names
+// Returns a Promise
 async function idsToNames(ids)
 {
     const id_objects = ids.map(x => mongoose.Types.ObjectId(x));
@@ -109,6 +121,7 @@ async function idsToNames(ids)
 }
 
 // Searches all game names for a query string
+// Returns a Promise
 async function searchNames(search, num)
 {
     const re = new RegExp(search, 'i');
@@ -132,6 +145,7 @@ module.exports =
 {
     create,
     get,
+    remove,
     all,
     allNames,
     idsToNames,

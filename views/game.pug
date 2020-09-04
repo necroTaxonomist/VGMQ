@@ -32,3 +32,9 @@ block content
     each song in playlist.songs
       li
         a(href="https://www.youtube.com/watch?v=" + song.id + "&list=" + playlist.id) #{song.title}
+
+  form(action="/games/remove" method="POST" onsubmit="return confirm('Delete this game?');")
+    p
+      input(name="game_name" type="hidden" value=game.game_name)
+      input(name="source_url" type="hidden" value="/games")
+      button(type="submit" style={color: 'red'}) Delete Game

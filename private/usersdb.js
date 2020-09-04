@@ -29,7 +29,7 @@ userSchema.virtual('num_games').get(
 var userModel = mongoose.model('user', userSchema);
 
 // Create a new user
-// Returns a Promise, may throw an error
+// Returns a Query
 function create(username, password)
 {
     return userModel.create(
@@ -41,7 +41,7 @@ function create(username, password)
 }
 
 // Try to authenticate for a user
-// Returns a Promise, may throw an error
+// Returns a Promise
 async function auth(username, password)
 {
     var found = await userModel.exists(
@@ -60,18 +60,18 @@ async function auth(username, password)
 }
 
 // Get the user with the given username
-// Returns a Promise, may throw an error
+// Returns a Query
 function get(username)
 {
     return userModel.findOne(
         {
             username: username
         }
-    ).exec();
+    );
 }
 
 // Get all usernames
-// Returns a Promise, may throw an error
+// Returns a Promise
 async function allUsernames()
 {
     const query = await userModel.find({});
@@ -86,6 +86,7 @@ async function allUsernames()
 }
 
 // Adds a game to a user
+// Returns a Promise
 async function addGameToUser(game_name, username)
 {
     // Get the game to add
@@ -99,6 +100,7 @@ async function addGameToUser(game_name, username)
 }
 
 // Removes a game from a user
+// Returns a Promise
 async function removeGameFromUser(game_name, username)
 {
     // Get the game to remove
@@ -111,6 +113,20 @@ async function removeGameFromUser(game_name, username)
     return userModel.findOneAndUpdate(query, update).exec();
 }
 
+// Removes a game from all users who have it
+// Returns a Promise
+async function removeGameFromAllUsers(game_name)
+{
+    // Get the game to remove
+    var game = await gamesdb.get(game_name);
+    var game_id = game.id;
+
+    var query = { games: { $in: game_id } };
+    var update = { $pull: { games: game_id } };
+
+    return userModel.findOneAndUpdate(query, update).exec();
+}
+
 module.exports =
 {
     create,
@@ -118,5 +134,6 @@ module.exports =
     get,
     allUsernames,
     addGameToUser,
-    removeGameFromUser
+    removeGameFromUser,
+    removeGameFromAllUsers
 }

@@ -3,6 +3,7 @@ var router = express.Router();
 var createError = require('http-errors');
 
 var yt = require('../private/yt');
+var db = require('../private/database');
 var usersdb = require('../private/usersdb');
 var gamesdb = require('../private/gamesdb');
 
@@ -88,8 +89,6 @@ async function gamePage(req, res, next)
     // Get the current user
     var currentuser = await usersdb.get(req.session.username);
 
-    
-
     try  // Get the game
     {
         var game = await gamesdb.get(game_name);
@@ -138,5 +137,33 @@ async function addGame(req, res, next)
     }
 }
 router.post('/add', addGame);
+
+/* POST to remove a game */
+async function removeGame(req, res, next)
+{
+    try
+    {
+        await usersdb.auth(req.session.username, req.session.password);
+
+        var game_name = req.body.game_name;
+
+        // I wanted to do a transaction for this, but Mongo said "fuck you"
+        // So we will just do this in a shitty unsafe way
+
+        // First, remove from all users
+        await usersdb.removeGameFromAllUsers(game_name);
+
+        // Remove from games
+        await gamesdb.remove(game_name);
+
+        res.redirect(req.body.source_url);
+    }
+    catch (err)
+    {
+        var string = encodeURIComponent(err);
+        res.redirect(req.body.source_url + '?err=' + err);
+    }
+}
+router.post('/remove', removeGame);
 
 module.exports = router;

@@ -6,6 +6,9 @@ var mongoose = require('mongoose');
 var mongoDB = 'mongodb://localhost/vgmq';
 mongoose.connect(mongoDB, { useNewUrlParser: true });
 
+// Use find and modify
+mongoose.set('useFindAndModify', false);
+
 //Get the default connection
 var db = mongoose.connection;
 
