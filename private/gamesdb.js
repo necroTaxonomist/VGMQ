@@ -35,24 +35,6 @@ var gameSchema = new mongoose.Schema(
     },
     { collection: 'games' }
 );
-gameSchema.virtual('norm_game_name').get(function()
-    {
-        // Make lowercase
-        var str = this.game_name.toLowerCase();
-
-        // Remove starting "The "
-        const the = 'the ';
-        if (str.search(the) == 0)
-        {
-            str = str.substring(the.length);
-        }
-
-        // Remove colons
-        str = str.replace(':', '');
-
-        return str;
-    }
-);
 
 // User Model
 var gameModel = mongoose.model('game', gameSchema);
@@ -95,14 +77,14 @@ function remove(name)
 // Returns a Query
 function all()
 {
-    return gameModel.find({}).sort('norm_game_name');
+    return gameModel.find({}).sort('game_name');
 }
 
 // Get all game names
 // Returns a Promise
 async function allNames()
 {
-    const query = await gameModel.find({}).sort('norm_game_name');
+    const query = await gameModel.find({}).sort('game_name');
     var names = [];
 
     for await (const game of query)
@@ -126,7 +108,7 @@ async function idsToNames(ids)
                 $in: id_objects
             }
         }
-    ).sort('norm_game_name');
+    ).sort('game_name');
 
     var names = [];
 

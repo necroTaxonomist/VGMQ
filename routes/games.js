@@ -7,6 +7,37 @@ var db = require('../private/database');
 var usersdb = require('../private/usersdb');
 var gamesdb = require('../private/gamesdb');
 
+function customSort(a, b)
+{
+    function customTf(input)
+    {
+        // Make lowercase
+        var str = input.toLowerCase();
+
+        // Remove starting "The "
+        const the = 'the ';
+        if (str.search(the) == 0)
+        {
+            str = str.substring(the.length);
+        }
+
+        // Remove colons
+        str = str.replace(':', '');
+
+        return str;
+    }
+
+    var a2 = customTf(a);
+    var b2 = customTf(b);
+
+    if (a2 < b2)
+        return -1;
+    else if (a2 > b2)
+        return 1;
+    else
+        return 0;
+}
+
 /* GET games listing */
 async function gamesListing(req, res, next)
 {
@@ -28,6 +59,13 @@ async function gamesListing(req, res, next)
 
     // Get all the games in the database
     var games = await gamesdb.all();
+    
+    // Apply custom sort
+    games = games.sort(function(a, b)
+        {
+            return customSort(a.game_name, b.game_name);
+        }
+    );
 
     var content = 
     {
