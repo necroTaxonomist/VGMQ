@@ -147,32 +147,19 @@ function autocomplete(inp, extra_callback = undefined)
 
 async function getSimilar(input)
 {
-    // Make a search request through ajax
-    var xhr = new XMLHttpRequest();
+    try
+    {
+        // Make a search request through ajax
+        var url = '/games/all?search=' + encodeURIComponent(input);
+        var response = await xhttpAsync('get', url);
+        var responseText = response.responseText;
 
-    // Get the response text
-    var responseText = await new Promise(function(resolve, reject)
-        {
-            xhr.onreadystatechange = function()
-            {
-                if (xhr.readyState == 4)
-                {
-                    if (xhr.status >= 300)
-                    {
-                        reject("Error, status code = " + xhr.status)
-                    }
-                    else
-                    {
-                        resolve(xhr.responseText);
-                    }
-                }
-            }
-
-            xhr.open('get', '/games/all?search=' + encodeURIComponent(input), true)
-            xhr.send();
-        }
-    );
-
-    // Return as JSON
-    return JSON.parse(responseText);
+        // Return as JSON
+        return JSON.parse(responseText);
+    }
+    catch (err)
+    {
+        console.log('Failed to query DB: ' + err);
+        return [];
+    }
 }

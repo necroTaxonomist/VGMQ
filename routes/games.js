@@ -59,7 +59,7 @@ async function gamePage(req, res, next)
     }
 
     // Get the game name from the query
-    var game_name = req.params["name"];
+    var game_name = decodeURIComponent(req.params["name"]);
 
     // Return a JSON list instead
     if (game_name == "all")

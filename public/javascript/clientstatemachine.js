@@ -105,32 +105,14 @@ async function submitGameSettings()
     // Get the settings from the form
     const postData = new FormData(document.getElementById("settings"));
 
-    // Convert to a URL string
-    const postStr = new URLSearchParams(postData).toString();
-
-    // Submit through ajax
-    var xhr = new XMLHttpRequest();
-
-    // Get the response text
-    var success = await new Promise(function(resolve)
-        {
-            xhr.onreadystatechange = function()
-            {
-                if (xhr.readyState == 4)
-                {
-                    resolve(xhr.status < 300);
-                }
-            }
-
-            xhr.open('post', postUrl, true)
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            xhr.send(postStr);
-        }
-    );
-
-    if (!success)
+    try
+    {
+        await xhttpAsyncForm(postUrl, postData);
+    }
+    catch (err)
     {
         // Failed, return to the old settings
+        console.log('Failed to post settings: ' + err);
         showGameSettings();
     }
 }

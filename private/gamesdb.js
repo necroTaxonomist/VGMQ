@@ -37,13 +37,18 @@ var gameSchema = new mongoose.Schema(
 );
 gameSchema.virtual('norm_game_name').get(function()
     {
+        // Make lowercase
         var str = this.game_name.toLowerCase();
-        const the = 'the ';
 
+        // Remove starting "The "
+        const the = 'the ';
         if (str.search(the) == 0)
         {
             str = str.substring(the.length);
         }
+
+        // Remove colons
+        str = str.replace(':', '');
 
         return str;
     }

@@ -22,7 +22,7 @@ block content
     each game in games
       li(class="gameitem")
         input(class="checkmark" type="checkbox" checked=currentuser.games.includes(game._id) name=game.game_name)
-        a(href="/games/" + game.game_name) #{game.game_name}
+        a(href="/games/" + encodeURIComponent(game.game_name)) #{game.game_name}
 
   form(id="addform" action="/users/" + currentuser.username + "/add" method="POST")
     input(name="game_name" type="hidden" id="addgamename")
@@ -31,6 +31,8 @@ block content
   form(id="removeform" action="/users/" + currentuser.username + "/remove" method="POST")
     input(name="game_name" type="hidden" id="removegamename")
     input(name="source_url" type="hidden" value="/games")
+
+  script(src="/javascript/xhttp.js")
 
   script.
     var addform = document.getElementById("addform");
@@ -52,12 +54,12 @@ block content
           if (this.checked)
           {
             addgamename.value = this.name;
-            addform.submit();
+            xhttpAsyncForm("/users/#{currentuser.username}/add", new FormData(addform));
           }
           else
           {
             removegamename.value = this.name;
-            removeform.submit();
+            xhttpAsyncForm("/users/#{currentuser.username}/remove", new FormData(removeform));
           }
         }
       }
