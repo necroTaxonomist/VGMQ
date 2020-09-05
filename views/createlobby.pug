@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  a(href="/main") Back to main page
+
+  h2 Create a lobby
+
+  form(action="/lobby/create" method="POST")
+    p
+      | Lobby Name: 
+      input(name="name" type="text" required)
+      br
+      | Lobby Password (Blank for public): 
+      input(name="password" type="text")
+      br
+      button(type="submit") Create
+
+  if errortext
+    p(style={color: 'red'}) #{errortext}

@@ -148,7 +148,7 @@ async function searchNames(search, num)
 
     if (names.length > num)
     {
-        names = names.slice(0, names.length);
+        names = names.slice(0, num);
     }
 
     return names;

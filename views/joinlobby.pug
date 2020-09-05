@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  a(href="/main") Back to main page
+
+  h2 Join a lobby
+
+  if errortext
+    p(style={color: 'red'}) #{errortext}
+
+  ul
+    each lobby in lobbies
+      li
+        form(action="/lobby/join" method="POST")
+          input(name="name" type="hidden" value=lobby.name)
+          | #{lobby.name}: (#{lobby.players.length} players) 
+          if lobby.password != ''
+            input(name="password" type="text" placeholder="Password" required)
+          button(type="submit") Join
+  p
+    a(class='button' href="/lobby/create") Create a lobby

@@ -1,5 +1,5 @@
 
-function autocomplete(inp)
+function autocomplete(inp, extra_callback = undefined)
 {
     // I stole this shit from W3Schools lol
 
@@ -44,6 +44,9 @@ function autocomplete(inp)
 
                         // Close the list of autocompleted values
                         closeAllLists();
+
+                        if (extra_callback)  // Call the enter callback also
+                            extra_callback();
                     }
                 );
 

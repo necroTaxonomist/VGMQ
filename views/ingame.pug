@@ -1,0 +1,96 @@
+extends layout
+
+block content
+  h2(id="gamestate") Game State
+
+  form(id="settings" hidden)
+    h3 Game Settings
+
+    | Number of Games: 
+    input(name="num_games" id="num_games" type="number" min="1" max="100" disabled)
+    br
+
+    | Game Selection
+    input(name="game_selection" id="gamesel_random" type="radio" value="random" checked disabled)
+    | Random  
+    input(name="game_selection" id="gamesel_mainly_played" type="radio" value="mainly_played" disabled)
+    | Mainly Played  
+    input(name="game_selection" id="gamesel_only_played" type="radio" value="only_played" disabled)
+    | Only Played
+    br
+
+    | Song Selection
+    input(name="song_selection" id="songsel_random" type="radio" value="random" checked disabled)
+    | Random  
+    input(name="song_selection" id="songsel_mainly_played" type="radio" value="weight_by_views" disabled)
+    | Weight by Views
+    input(name="song_selection" id="songsel_only_played" type="radio" value="weight_by_likes" disabled)
+    | Weight by Likes
+    br
+
+    | Guess Time (Seconds): 
+    input(name="guess_time" id="guess_time" type="number" min="1" max="100" disabled)
+    br
+
+    input(id="reset_settings" type="button" value="Reset" disabled)
+    input(id="submit_settings" type="button" value="Apply" disabled)
+
+  h1(id="countdown" hidden)
+
+  div(id="videosection" hidden)
+    h3(id="videoname") Game Name
+    h4(id="songname") Song Name
+    iframe(id="video" src="" allow="autoplay" frameborder="0")
+
+  form(id="inputsection" autocomplete="off" hidden)
+    p
+      div( class="autocomplete")
+        label(for="inputbox" id="inputconfirm")
+        input(id="inputbox" type="text" placeholder="Game Name" disabled)
+
+  h3 Players
+
+  p(id="readystart" hidden)
+    button(id="readybutton") Ready
+    button(id="startbutton" disabled) Start
+
+  ul(id="players")
+
+  h3 Spectators
+  ul(id="spectators")
+
+  p
+    input(id="eventinject" type="text")
+    input(id="eventinject_button" type="button" value="Inject")
+
+  script(src="/javascript/searchgames.js")
+  script(src="/javascript/statemachine.js")
+  script(src="/javascript/clientstatemachine.js")
+  script.
+    startClientStateMachine("#{username}");
+
+    document.getElementById("reset_settings").onclick = showGameSettings;
+    document.getElementById("submit_settings").onclick = submitGameSettings;
+
+    autocomplete(document.getElementById("inputbox"), submitInput);
+
+    document.getElementById("inputbox").onkeydown = function()
+    {
+      if (event.keyCode == 13)
+        submitInput();
+    }
+    document.getElementById("inputbox").oninput = changeInput;
+
+    document.getElementById("eventinject_button").onclick = function()
+    {
+      var input = document.getElementById("eventinject").value;
+      main.handle({name: input});
+    }
+    document.getElementById("eventinject").onkeydown = function()
+    {
+      if (event.keyCode == 13)
+      {
+        var input = document.getElementById("eventinject").value;
+        main.handle({name: input});
+      }
+    }
