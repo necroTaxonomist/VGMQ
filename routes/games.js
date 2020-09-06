@@ -143,6 +143,7 @@ async function gamePage(req, res, next)
     }
     catch (err)  // Game not found
     {
+        console.log(err);
         next(createError(404));
     }
 }

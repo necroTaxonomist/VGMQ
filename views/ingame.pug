@@ -1,6 +1,10 @@
 extends layout
 
 block content
+  p
+    button(id="leavebutton") Leave the game
+    button(id="abortbutton" disabled) Stop the game
+
   h2(id="gamestate") Game State
 
   form(id="settings" hidden)
@@ -12,9 +16,7 @@ block content
 
     | Game Selection
     input(name="game_selection" id="gamesel_random" type="radio" value="random" checked disabled)
-    | Random  
-    input(name="game_selection" id="gamesel_mainly_played" type="radio" value="mainly_played" disabled)
-    | Mainly Played  
+    | Random   
     input(name="game_selection" id="gamesel_only_played" type="radio" value="only_played" disabled)
     | Only Played
     br
@@ -22,9 +24,9 @@ block content
     | Song Selection
     input(name="song_selection" id="songsel_random" type="radio" value="random" checked disabled)
     | Random  
-    input(name="song_selection" id="songsel_mainly_played" type="radio" value="weight_by_views" disabled)
+    input(name="song_selection" id="songsel_weight_by_views" type="radio" value="weight_by_views" disabled)
     | Weight by Views
-    input(name="song_selection" id="songsel_only_played" type="radio" value="weight_by_likes" disabled)
+    input(name="song_selection" id="songsel_weight_by_likes" type="radio" value="weight_by_likes" disabled)
     | Weight by Likes
     br
 
@@ -59,16 +61,20 @@ block content
   h3 Spectators
   ul(id="spectators")
 
-  p
-    input(id="eventinject" type="text")
-    input(id="eventinject_button" type="button" value="Inject")
-
+  script(src="/socket.io/socket.io.js")
   script(src="/javascript/xhttp.js")
   script(src="/javascript/searchgames.js")
   script(src="/javascript/statemachine.js")
   script(src="/javascript/clientstatemachine.js")
   script.
-    startClientStateMachine("#{username}");
+    window.addEventListener('load', async function()
+      {
+        await startClientStateMachine("#{username}", "#{lobby.name}");
+      }
+    );
+
+    document.getElementById("leavebutton").onclick = leaveGame;
+    document.getElementById("abortbutton").onclick = abortGame;
 
     document.getElementById("reset_settings").onclick = showGameSettings;
     document.getElementById("submit_settings").onclick = submitGameSettings;
@@ -78,20 +84,31 @@ block content
     document.getElementById("inputbox").onkeydown = function()
     {
       if (event.keyCode == 13)
+      {
         submitInput();
+      }
     }
     document.getElementById("inputbox").oninput = changeInput;
 
-    document.getElementById("eventinject_button").onclick = function()
-    {
-      var input = document.getElementById("eventinject").value;
-      main.handle({name: input});
-    }
-    document.getElementById("eventinject").onkeydown = function()
-    {
-      if (event.keyCode == 13)
+    document.getElementById("readybutton").onclick = sendReady;
+    document.getElementById("startbutton").onclick = sendStart;
+
+
+  if username == 'Admin'
+    p
+    input(id="eventinject" type="text")
+    input(id="eventinject_button" type="button" value="Inject")
+    script.
+      document.getElementById("eventinject_button").onclick = async function()
       {
         var input = document.getElementById("eventinject").value;
-        main.handle({name: input});
+        await main.handle(input);
       }
-    }
+      document.getElementById("eventinject").onkeydown = async function()
+      {
+        if (event.keyCode == 13)
+        {
+          var input = document.getElementById("eventinject").value;
+          await main.handle(input);
+        }
+      }

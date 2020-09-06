@@ -5,7 +5,7 @@ block content
   br
   a(href="/games") Back to all games
   br
-  a(href="/games/" + currentuser.username) Back to my games library
+  a(href="/users/" + currentuser.username) Back to my games library
 
   h2 Game: #{game.game_name}
 
@@ -31,7 +31,8 @@ block content
   ol
     each song in playlist.songs
       li
-        a(href="https://www.youtube.com/watch?v=" + song.id + "&list=" + playlist.id) #{song.title}
+        a(href="https://www.youtube.com/watch?v=" + song.id + "&list=" + playlist.id target="_blank") #{song.title}
+        |  (#{song.views} views, #{song.likes} likes, weight = #{song.weight})
 
   form(action="/games/remove" method="POST" onsubmit="return confirm('Delete this game?');")
     p

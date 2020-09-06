@@ -47,8 +47,12 @@ async function postCreateLobby(req, res, next)
     {
         await usersdb.auth(req.session.username, req.session.password);
 
+        // Prune inactive lobbies
+        matchmaking.prune();
+
         // Create a lobby with this user in it
-        matchmaking.createLobbyWithPlayer(req.body.name, req.body.password, req.session.username);
+        // Also starts the lobby state machine
+        await matchmaking.createLobbyWithPlayer(req.body.name, req.body.password, req.session.username);
 
         // Go to game
         res.redirect('/lobby/ingame');
@@ -83,6 +87,9 @@ async function getJoinLobby(req, res, next)
         return;
     }
     catch (err) {}
+
+    // Prune inactive lobbies
+    matchmaking.prune();
 
     var content =
     {
@@ -139,8 +146,25 @@ async function getInGame(req, res, next)
         res.redirect('/');
         return;
     }
-    
-    res.render('ingame', { username: req.session.username });
+
+    try
+    {
+        // Get the lobby with this player
+        var lobby = matchmaking.getLobbyWithPlayer(req.session.username);
+
+        // Show the in-game screen
+        var content =
+        {
+            username: req.session.username,
+            lobby: lobby
+        };
+        res.render('ingame', content);
+    }
+    catch (err)
+    {
+        // Failed to get in the lobby
+        res.redirect('/main');
+    }
 }
 router.get('/ingame', getInGame);
 
@@ -156,7 +180,9 @@ async function postSettings(req, res, next)
 
         // Update the lobby settings
         lobby.settings = req.body;
-        console.log(lobby);
+
+        // Notify clients
+        lobby.sendLobbyInfo();
 
         // Go to the game
         res.status(200).send('OK');

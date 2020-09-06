@@ -127,6 +127,17 @@ async function removeGameFromAllUsers(game_name)
     return userModel.findOneAndUpdate(query, update).exec();
 }
 
+// Returns all games on a user's list
+// Returns a Query
+async function getGamesFromUser(username)
+{
+    // Get the user
+    var user = await get(username);
+
+    // Return the games
+    return gamesdb.idsToGames(user.games);
+}
+
 module.exports =
 {
     create,
@@ -135,5 +146,6 @@ module.exports =
     allUsernames,
     addGameToUser,
     removeGameFromUser,
-    removeGameFromAllUsers
+    removeGameFromAllUsers,
+    getGamesFromUser
 }

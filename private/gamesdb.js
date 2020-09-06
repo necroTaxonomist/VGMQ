@@ -141,6 +141,22 @@ async function searchNames(search, num)
     return names;
 }
 
+// Converts a list of game IDs to games
+// Returns a Query
+async function idsToGames(ids)
+{
+    const id_objects = ids.map(x => mongoose.Types.ObjectId(x));
+
+    return await gameModel.find(
+        {
+            _id:
+            {
+                $in: id_objects
+            }
+        }
+    ).sort('game_name');
+}
+
 module.exports =
 {
     create,
@@ -149,5 +165,6 @@ module.exports =
     all,
     allNames,
     idsToNames,
-    searchNames
+    searchNames,
+    idsToGames
 }

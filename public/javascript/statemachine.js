@@ -6,11 +6,13 @@ function State(name, onEntry = function() {}, onExit = function() {})
     this.onExit = onExit;
     this.parent = null;
 
-    this.handle = function(event)
+    this.handle = async function(name, event = {})
     {
-        if (this[event.name])
+        if (this[name])
         {
-            this[event.name](event);
+            let ret = this[name](event);
+            if (Promise.resolve(ret))
+                await ret;
         }
     }
 
@@ -31,38 +33,44 @@ function StateMachine(states = [])
 
     this.cur_state = null;
 
-    this.handle = function(event)
+    this.handle = async function(name, event = {})
     {
         // Pass the event to the current state
         if (this.cur_state)
         {
-            this.cur_state.handle(event);
+            let ret = this.cur_state.handle(name, event);
+            if (Promise.resolve(ret))
+                await ret;
         }
-    }
+    };
 
-    this.goto = function(state_name)
+    this.goto = async function(state_name)
     {
         if (this.states[state_name])  // Valid state
         {
             // Call exit for current state
             if (this.cur_state)
             {
-                this.cur_state.onExit();
+                let ret = this.cur_state.onExit();
+                if (Promise.resolve(ret))
+                    await ret;
             }
 
             // Set the new state
             this.cur_state = this.states[state_name];
 
             // Call enter for the new state
-            this.cur_state.onEntry();
+            let ret = this.cur_state.onEntry();
+            if (Promise.resolve(ret))
+                await ret;
         }
-    }
+    };
 
     this.addState = function(state)
     {
         this.states[state.name] = state;
         state.parent = this;
-    }
+    };
 }
 
 // This is used by both client and server

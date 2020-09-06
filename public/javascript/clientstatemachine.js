@@ -7,35 +7,15 @@
 var local_username = '';
 
 // Lobbby information
-const lobby =
-{
-    gamestate: 'queueing',
-    name: 'temp',
-    round: 1,
-    players:
-    [
-        { username: 'Admin', host: true, score: 0 },
-        { username: 'Other', ready: true, score: 0},
-        { username: 'Other Guy', spectator: true}
-    ],
-    settings: {
-        num_games: 20,
-        game_selection: 'random',
-        song_selection: 'random',
-        guess_time: 20
-    }
-}
+var lobby = {};
 
 // Video information
-const video =
-{
-    game_name: 'Secret of Mana',
-    video_id: 'pS-ojf2-zjU',
-    song_name: 'Distant Thunder'
-}
+var video = {};
+
+// Socket
+var socket;
 
 // Time remaining
-
 var refTime;
 
 function resetTimeRemaining()
@@ -62,6 +42,18 @@ function getTimeRemaining()
 //================================
 // DOCUMENT VIEWS
 //================================
+
+function leaveGame()
+{
+    // Go back to the main menu
+    window.location.replace("/main");
+}
+
+function abortGame()
+{
+    // Tell the server to abort
+    socket.emit('abort');
+}
 
 function showGameSettings()
 {
@@ -147,6 +139,9 @@ function startVideo()
     // Get the video
     var vid = document.getElementById("video");
 
+    // Stop it first
+    vid.src = '';
+
     // Get an embedded YouTube video
     vid.src = 'https://www.youtube.com/embed/' + video.video_id + '?autoplay=1&controls=0';
 }
@@ -155,6 +150,9 @@ function showVideo()
 {
     // Get the video
     var vid = document.getElementById("video");
+
+    // Stop it first
+    vid.src = '';
 
     // Get an embedded YouTube video
     vid.src = 'https://www.youtube.com/embed/' + video.video_id + '?autoplay=1&controls=0';
@@ -174,7 +172,7 @@ function hideVideo()
     // Hide
     document.getElementById("videosection").hidden = true;
 
-    // Get an embedded YouTube video
+    // Stop the video
     document.getElementById("video").src = '';
 }
 
@@ -184,16 +182,19 @@ function showInput(disabled = false)
     // Set disabled
     document.getElementById("inputbox").disabled = disabled;
 
+    // Reset if enabling
+    if (!disabled)
+    {
+        document.getElementById("inputbox").value = '';
+        document.getElementById("inputconfirm").innerHTML = '';
+    }
+
     // Unhide
     document.getElementById("inputsection").hidden = false;
 }
 
 function hideInput()
 {
-    // Reset values
-    document.getElementById("inputbox").value = '';
-    document.getElementById("inputconfirm").innerHTML = '';
-
     // Hide
     document.getElementById("inputsection").hidden = true;
 }
@@ -202,10 +203,11 @@ function submitInput()
 {
     if (document.getElementById("inputbox").value.length != 0)
     {
-        console.log('submitted ' + document.getElementById("inputbox").value);
         document.getElementById("inputconfirm").innerHTML = ' ✅';
 
-        // TODO: Send submission to the server
+        // Send submission to the server
+        console.log('Submitting ' + document.getElementById("inputbox").value);
+        socket.emit('answer', document.getElementById("inputbox").value);
     }
 }
 
@@ -243,6 +245,16 @@ function hideReadyStart()
     document.getElementById("readystart").hidden = true;
 }
 
+function sendReady()
+{
+    socket.emit('ready');
+}
+
+function sendStart()
+{
+    socket.emit('start');
+}
+
 // Show all the players, with ready or unready indicators
 function showQueueingPlayers()
 {
@@ -254,6 +266,9 @@ function showQueueingPlayers()
     for (player of lobby.players.filter(player => !player.spectator))
     {
         var li = document.createElement("li");
+
+        if (player.host)
+            li.innerText += '🏠';
 
         if (player.ready)
             li.innerText += '✔️ ';
@@ -276,7 +291,7 @@ function showActivePlayers()
     // Sort by score
     function sortFunc(a, b)
     {
-        return b.score - a.score;
+        return b.points - a.points;
     }
 
     // For all non-spectator players, sorted by score
@@ -291,7 +306,7 @@ function showActivePlayers()
 
         li.innerText += player.username;
 
-        li.innerText += '(' + player.score + ' points)';
+        li.innerText += '(' + player.points + ' points)';
 
         ul.appendChild(li);
     }
@@ -307,7 +322,7 @@ function showWinLosePlayers()
     // Sort by score
     function sortFunc(a, b)
     {
-        return b.score - a.score;
+        return b.points - a.points;
     }
 
     // For all non-spectator players, sorted by score
@@ -322,7 +337,10 @@ function showWinLosePlayers()
 
         li.innerText += player.username;
 
-        li.innerText += '(' + player.score + ' points)';
+        li.innerText += '(' + player.points + ' points)';
+
+        if (player.blame)
+            li.innerText += ' 📚';
 
         ul.appendChild(li);
     }
@@ -361,16 +379,15 @@ function EnteringState()
             // Set the game state
             document.getElementById("gamestate").innerHTML = 'Entering the lobby...';
 
-            // TODO: Connect to the host over Socket.IO
-
-            // TODO: Ask the host for all the lobby info so we can get caught up
+            // Tell the host we've connected, and it will send back lobby info
+            socket.emit('setusername', local_username);
         }
     );
-    this.addHandler('lobby_info', function(event)
+    this.addHandler('lobby_info', async function(event)
         {
             // The host has acknowledged us,
             // so we should go to whatever state the game is currently in
-            this.parent.goto(lobby.gamestate);
+            await this.parent.goto(lobby.gamestate);
         }
     );
 }
@@ -415,10 +432,18 @@ function QueueingState()
             showSpectators();
         }
     );
-    this.addHandler('new_video', function(event)
+    this.addHandler('new_video', async function(event)
         {
             // Got the first video, go to guessing
-            this.parent.goto('guessing');
+            await this.parent.goto('guessing');
+        }
+    );
+    this.addHandler('loading', function(event)
+        {
+            const gamestate_str = 'Loading song ' + event.current + ' out of ' + event.total + '...';
+            document.getElementById("gamestate").innerHTML = gamestate_str;
+
+            lobby.num_rounds = event.total;
         }
     );
 }
@@ -432,7 +457,7 @@ function GuessingState()
         function()  // onEntry
         {
             // Set the game state
-            document.getElementById("gamestate").innerHTML = 'Round ' + lobby.round + '/' + lobby.settings.num_games;
+            document.getElementById("gamestate").innerHTML = 'Round ' + video.round + '/' + lobby.num_rounds;
 
             // Show the countdown
             showCountdown();
@@ -466,10 +491,10 @@ function GuessingState()
             showSpectators();
         }
     );
-    this.addHandler('round_over', function(event)
+    this.addHandler('round_over', async function(event)
         {
             // Round over, go to viewing
-            this.parent.goto('viewing');
+            await this.parent.goto('viewing');
         }
     );
 }
@@ -483,7 +508,7 @@ function ViewingState()
         function()  // onEntry
         {
             // Set the game state
-            document.getElementById("gamestate").innerHTML = 'Round ' + lobby.round + '/' + lobby.settings.num_games;
+            document.getElementById("gamestate").innerHTML = 'Round ' + video.round + '/' + lobby.num_rounds;
 
             // Show the video
             showVideo();
@@ -499,6 +524,9 @@ function ViewingState()
         {
             // Hide the video
             hideVideo();
+
+            // Hide the input box
+            hideInput();
         }
     );
     this.addHandler('lobby_info', function(event)
@@ -508,16 +536,16 @@ function ViewingState()
             showSpectators();
         }
     );
-    this.addHandler('new_video', function(event)
+    this.addHandler('new_video', async function(event)
         {
             // Got the next video, go to guessing
-            this.parent.goto('guessing');
+            await this.parent.goto('guessing');
         }
     );
-    this.addHandler('game_over', function(event)
+    this.addHandler('game_over', async function(event)
     {
         // Game over, go back to queueing
-        this.parent.goto('queueing');
+        await this.parent.goto('queueing');
     }
 );
 }
@@ -528,13 +556,47 @@ main.addState(new ViewingState());
 //================================
 
 // Start the state machine
-function startClientStateMachine(username)
+async function startClientStateMachine(username, lobbyname)
 {
     // Set the session information
     local_username = username;
 
+    // Connect to the host over Socket.IO
+    var nsp_name = '/' + encodeURIComponent(lobbyname);
+    console.log('connecting to ' + nsp_name);
+    socket = io(nsp_name);
+
+    // Listen for events
+    socket.on('lobby_info', async (data) =>
+        {
+            lobby = data;
+            await main.handle('lobby_info', data);
+        }
+    );
+    socket.on('loading', async (data) =>
+        {
+            await main.handle('loading', data);
+        }
+    );
+    socket.on('new_video', async (data) =>
+        {
+            video = data;
+            await main.handle('new_video', data);
+        }
+    );
+    socket.on('round_over', async () =>
+        {
+            await main.handle('round_over');
+        }
+    );
+    socket.on('game_over', async () =>
+        {
+            await main.handle('game_over');
+        }
+    );
+
     // Start the state machine in the entering state
-    main.goto('entering');
+    await main.goto('entering');
 }
 
 // Gracefully stop the state machine

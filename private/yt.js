@@ -73,37 +73,88 @@ async function getPlaylistWithSongs(id)
 
     var nextPageToken = undefined;
 
-    // Set up the base query
-    var query = 
+    // Query for playlist items
+    var playlist_items_query = 
     {
         playlistId: id,
         part: 'snippet',
         maxResults: 50
     }
 
+    // Start a list of video ids
+    var video_ids = [];
+
     // Keep querying results
     do
     {
         // Query YouTube for playlist items
-        var songs_res = await youtube.playlistItems.list(query);
+        var res = await youtube.playlistItems.list(playlist_items_query);
 
         // Get the next page from the data
-        query.pageToken = songs_res.data.nextPageToken;
+        playlist_items_query.pageToken = res.data.nextPageToken;
 
-        // For each item, add the corresponding song
-        for (item of songs_res.data.items)
+        // For each item, get the ID
+        for (item of res.data.items)
+        {
+            video_ids.push(item.snippet.resourceId.videoId);
+        }
+    }
+    while (playlist_items_query.pageToken != undefined);
+
+    // Query for videos
+    var videos_query = 
+    {
+        id: video_ids.slice(0, 50).join(','),
+        part: 'snippet,contentDetails,statistics'
+    };
+
+    // Keep querying results
+    while (video_ids.length != 0)
+    {
+        // Query YouTube for videos
+        var res = await youtube.videos.list(videos_query);
+
+        // Remove the returned ids and update the query
+        video_ids = video_ids.slice(res.data.items.length);
+        videos_query.id = video_ids.slice(0, 50).join(',');
+
+        // For each item, write to the playlist
+        for (item of res.data.items)
         {
             playlist.songs.push(
                 {
                     title: item.snippet.title,
-                    id: item.snippet.resourceId.videoId
+                    id: item.id,
+                    duration: parseDuration(item.contentDetails.duration),
+                    views: item.statistics.viewCount,
+                    likes: item.statistics.likeCount
                 }
             );
         }
     }
-    while (query.pageToken != undefined);
 
     return playlist;
+}
+
+function parseDuration(str)  // Parses an ISO 8601 duration
+{
+    const re = /(-)?P(?:([.,\d]+)Y)?(?:([.,\d]+)M)?(?:([.,\d]+)W)?(?:([.,\d]+)D)?T(?:([.,\d]+)H)?(?:([.,\d]+)M)?(?:([.,\d]+)S)?/;
+
+    var matches = str.match(re);
+
+    var date = 
+    {
+        sign: (matches[1] === undefined) ? '+' : '-',
+        years: (matches[2] === undefined) ? 0 : parseInt(matches[2]),
+        months: (matches[3] === undefined) ? 0 : parseInt(matches[3]),
+        weeks: (matches[4] === undefined) ? 0 : parseInt(matches[4]),
+        days: (matches[5] === undefined) ? 0 : parseInt(matches[5]),
+        hours: (matches[6] === undefined) ? 0 : parseInt(matches[6]),
+        minutes: (matches[7] === undefined) ? 0 : parseInt(matches[7]),
+        seconds: (matches[8] === undefined) ? 0 : parseInt(matches[8])
+    }
+
+    return date;
 }
 
 module.exports = 
