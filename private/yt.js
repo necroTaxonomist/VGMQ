@@ -105,7 +105,7 @@ async function getPlaylistWithSongs(id)
     var videos_query = 
     {
         id: video_ids.slice(0, 50).join(','),
-        part: 'snippet,contentDetails,statistics'
+        part: 'snippet,contentDetails,statistics,status'
     };
 
     // Keep querying results
@@ -121,13 +121,21 @@ async function getPlaylistWithSongs(id)
         // For each item, write to the playlist
         for (item of res.data.items)
         {
+            let restricted = item.contentDetails.regionRestriction != undefined;
+
+            let duration = parseDuration(item.contentDetails.duration);
+            let short = (duration.minutes == 0) &&
+                        (duration.hours == 0) &&
+                        duration.seconds < 30;
+
             playlist.songs.push(
                 {
                     title: item.snippet.title,
                     id: item.id,
-                    duration: parseDuration(item.contentDetails.duration),
                     views: item.statistics.viewCount,
-                    likes: item.statistics.likeCount
+                    likes: item.statistics.likeCount,
+                    restricted: restricted,
+                    short: short
                 }
             );
         }

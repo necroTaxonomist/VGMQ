@@ -445,6 +445,9 @@ function HostStateMachine(name, password = '')
             // Query youtube for songs
             let playlist = await yt.getPlaylistWithSongs(game.playlist_id);
 
+            // Filter out songs that are restricted or too short
+            playlist.songs = playlist.songs.filter(song => !song.restricted && !song.short);
+
             // Choose the song select criterion
             let prop = undefined;
             if (this.settings.song_selection == 'weight_by_views')
