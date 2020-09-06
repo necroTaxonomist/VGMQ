@@ -31,10 +31,11 @@ function autocomplete(inp, extra_callback = undefined)
                 var b = document.createElement("div");
 
                 // Write into the element
-                b.innerHTML = item;
+                b.innerText = item;
 
                 // Insert an input field that will hold the item's value
-                b.innerHTML += "<input type='hidden' value='" + item + "'>";
+                var sanitize = item.replace("'", "&#39");
+                b.innerHTML += "<input type='hidden' value='" + sanitize + "'>";
 
                 // Execute a function when someone clicks on the item value
                 b.addEventListener("click", function(e)

@@ -206,8 +206,9 @@ function submitInput()
         document.getElementById("inputconfirm").innerHTML = ' ✅';
 
         // Send submission to the server
-        console.log('Submitting ' + document.getElementById("inputbox").value);
-        socket.emit('answer', document.getElementById("inputbox").value);
+        var value = document.getElementById("inputbox").value;
+        console.log('Submitting ' + value);
+        socket.emit('answer', value);
     }
 }
 

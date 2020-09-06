@@ -124,7 +124,10 @@ async function idsToNames(ids)
 // Returns a Promise
 async function searchNames(search, num)
 {
-    const re = new RegExp(search, 'i');
+    // Sanitize the input
+    const sanitized = search.replace(/[#-.]|[[-^]|[?|{}]/g, '\\$&');
+
+    const re = new RegExp(sanitized, 'i');
     const query = await gameModel.find({game_name: re});
     var names = [];
 

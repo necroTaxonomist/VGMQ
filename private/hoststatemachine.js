@@ -42,9 +42,20 @@ function QueueingState()
             this.parent.sendLobbyInfo();
         }
     );
+    this.loading = false;
     this.addHandler('start', async function(event)
         {
             console.log("QueueingState::start");
+
+            if (this.loading)
+            {
+                console.log("You only load once.");
+                return;
+            }
+            else
+            {
+                this.loading = true;
+            }
 
             // Don't start unless everyone is ready
             if (!this.parent.players.some(player => !player.ready))
@@ -62,6 +73,8 @@ function QueueingState()
                     player.points = 0;
                 }
             }
+
+            this.loading = false;
         }
     );
 }
