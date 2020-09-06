@@ -4,6 +4,7 @@ function autocomplete(inp, extra_callback = undefined)
     // I stole this shit from W3Schools lol
 
     var currentFocus;
+    var arr = [];
 
     // Execute a function when someone writes in the text field
     inp.addEventListener("input", async function(e)
@@ -24,8 +25,18 @@ function autocomplete(inp, extra_callback = undefined)
             // Append the div element as a child for the autocomplete container
             this.parentNode.appendChild(a);
 
-            // Get matching games from the database
-            for (item of await getSimilar(this.value))
+            // Try to get matching games from the database
+            try
+            {
+                arr = await getSimilar(this.value);
+            }
+            catch (err)
+            {
+                // Keep previous values
+            }
+
+            // For each item in the array
+            for (item of arr)
             {
                 // Create a div element for each item
                 var b = document.createElement("div");
@@ -146,8 +157,34 @@ function autocomplete(inp, extra_callback = undefined)
     );
 }
 
+// The time of the last query
+var last_query = undefined;
+
+// The minimum time that needs to pass before database queries (in seconds)
+const min_cooldown = .25;
+
+// Make a database query
 async function getSimilar(input)
 {
+    // Get the current time
+    var now = new Date().getTime();
+
+    if (last_query != undefined)
+    {
+        // Find the time since the last query
+        var distance = now - last_query;
+        var cooldown = (distance % (1000 * 60)) / 1000;
+
+        // Throw an error if too soon
+        if (cooldown < min_cooldown)
+        {
+            throw "Can't query the database this fast."
+        }
+    }
+
+    // Set the new last query time
+    last_query = now;
+
     try
     {
         // Make a search request through ajax
