@@ -459,8 +459,6 @@ function HostStateMachine(name, password = '')
                 // Weight using a Zipf distribution
                 setZipfWeights(playlist.songs, prop);
 
-                console.log(playlist.songs.slice(0, 10));
-
                 // Get the sum of all weights
                 let sum = 0;
                 for (song of playlist.songs)

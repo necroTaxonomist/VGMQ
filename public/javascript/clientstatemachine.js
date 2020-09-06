@@ -301,13 +301,13 @@ function showActivePlayers()
         var li = document.createElement("li");
 
         if (player.answered)
-            li.innerText += '🙂 ';
+            li.innerText += '🙂';
         else
-            li.innerText += '🤔 ';
+            li.innerText += '🤔';
 
-        li.innerText += player.username;
+        li.innerText += ' ' + player.username;
 
-        li.innerText += '(' + player.points + ' points)';
+        li.innerText += ' (' + player.points + ' points)';
 
         ul.appendChild(li);
     }
@@ -332,16 +332,16 @@ function showWinLosePlayers()
         var li = document.createElement("li");
 
         if (player.correct)
-            li.innerText += '😄 ';
+            li.innerText += '😄';
         else
-            li.innerText += '😢 ';
-
-        li.innerText += player.username;
-
-        li.innerText += '(' + player.points + ' points)';
+            li.innerText += '😢';
 
         if (player.blame)
-            li.innerText += ' 📚';
+            li.innerText += '📚';
+
+        li.innerText += ' ' + player.username;
+        li.innerText += ' (' + player.points + ' points)';
+        li.innerText += ' [' + player.answer + ']';
 
         ul.appendChild(li);
     }
