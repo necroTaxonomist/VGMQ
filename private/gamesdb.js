@@ -124,8 +124,8 @@ async function idsToNames(ids)
 // Returns a Promise
 async function searchNames(search, num)
 {
-    // Sanitize the input
-    const sanitized = search.replace(/[#-.]|[[-^]|[?|{}]/g, '\\$&');
+    // Nonword characters are interchangeable
+    const sanitized = search.replace(/\W+/g, '\\W*');
 
     const re = new RegExp(sanitized, 'i');
     const query = await gameModel.find({game_name: re});
