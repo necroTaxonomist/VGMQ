@@ -3,15 +3,9 @@ extends layout
 block content
   ul
     li
-      if username == 'Admin'
-        a(href="/lobby/create") Create a lobby
-      else
-        | Create a lobby (TODO)
+      a(href="/lobby/create") Create a lobby
     li
-      if username == 'Admin'
-        a(href="/lobby/join") Join a lobby
-      else
-        | Join a lobby (TODO)
+      a(href="/lobby/join") Join a lobby
     li
       a(href="/users/" + username) View my games library
     li
