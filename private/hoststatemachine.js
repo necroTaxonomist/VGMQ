@@ -241,7 +241,7 @@ function HostStateMachine(name, password = '')
     this.videos = [];
 
     // Local RNG
-    this.random = require('seedrandom')(new Date().getTime().toString());
+    this.random = require('seedrandom')(new Date().toString());
 
     // Add states
     this.addState(new QueueingState());

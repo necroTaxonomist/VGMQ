@@ -15,7 +15,7 @@ function registerRedirect(lobby_name)
         registered.add(lobby_name);
 
         // Add namespace callback
-        const nsp = require('../app').io.of('/' + lobby_name);
+        const nsp = require('../app').io.of('/' + encodeURIComponent(lobby_name));
         nsp.on('connection', redirectConnection);
     }
 }

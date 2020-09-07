@@ -14,6 +14,7 @@ var userSchema = new mongoose.Schema(
         password: { type: String, required: true },
         wins: { type: Number, default: 0 },
         exp: { type: Number, default: 0 },
+        lastlogin: { type: Date, default: new Date()},
         games: { type: [mongoose.Schema.Types.ObjectId], default: [] }
     },
     { collection: 'users' }
@@ -138,6 +139,15 @@ async function getGamesFromUser(username)
     return gamesdb.idsToGames(user.games);
 }
 
+// Updates the last login time for a user
+// Returns a Promise
+async function updateLastLogin(username)
+{
+    var query = { username: username };
+    var update = { lastlogin: new Date() };
+    return userModel.findOneAndUpdate(query, update).exec();
+}
+
 module.exports =
 {
     create,
@@ -147,5 +157,6 @@ module.exports =
     addGameToUser,
     removeGameFromUser,
     removeGameFromAllUsers,
-    getGamesFromUser
+    getGamesFromUser,
+    updateLastLogin
 }

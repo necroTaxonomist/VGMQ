@@ -16,3 +16,11 @@ block content
       | Gacha (TODO)
     li
       a(href="/logout") Log out
+  
+  if new_features != undefined && new_features.length != 0
+    h2 New Features:
+
+    ul
+    each feature in new_features
+      li
+        | #{feature}
