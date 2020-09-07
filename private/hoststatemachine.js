@@ -58,7 +58,7 @@ function QueueingState()
             }
 
             // Don't start unless everyone is ready
-            if (!this.parent.players.some(player => !player.ready))
+            if (!this.parent.players.some(player => !player.ready && !player.spectator))
             {
                 // Decide all the videos to use
                 await this.parent.generateVideos();

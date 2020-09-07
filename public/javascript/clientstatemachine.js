@@ -18,6 +18,9 @@ var socket;
 // Time remaining
 var refTime;
 
+// YouTube player
+var ytPlayer;
+
 function resetTimeRemaining()
 {
     // Get today's date and time
@@ -109,6 +112,24 @@ async function submitGameSettings()
     }
 }
 
+function showVolume()
+{
+    var volume = document.getElementById('volumecontrols');
+    volume.hidden = false;
+}
+
+function hideVolume()
+{
+    var volume = document.getElementById('volumecontrols');
+    volume.hidden = true;
+}
+
+function updateVolume()
+{
+    var slider = document.getElementById('volume');
+    ytPlayer.setVolume(slider.value);
+}
+
 function showCountdown()
 {
     // Reset the time
@@ -136,26 +157,14 @@ function startVideo()
     // Hide
     document.getElementById("videosection").hidden = true;
 
-    // Get the video
-    var vid = document.getElementById("video");
-
-    // Stop it first
-    vid.src = '';
-
-    // Get an embedded YouTube video
-    vid.src = 'https://www.youtube.com/embed/' + video.video_id + '?autoplay=1&controls=0';
+    // Set the video ID, it will play automatically
+    ytPlayer.loadVideoById(video.video_id);
 }
 
 function showVideo()
 {
-    // Get the video
-    var vid = document.getElementById("video");
-
-    // Stop it first
-    vid.src = '';
-
-    // Get an embedded YouTube video
-    vid.src = 'https://www.youtube.com/embed/' + video.video_id + '?autoplay=1&controls=0';
+    // Set the video back to start
+    ytPlayer.seekTo(0, true);
 
     // Set the game name
     document.getElementById("videoname").innerHTML = video.game_name;
@@ -173,7 +182,7 @@ function hideVideo()
     document.getElementById("videosection").hidden = true;
 
     // Stop the video
-    document.getElementById("video").src = '';
+    ytPlayer.stopVideo();
 }
 
 // Show the game name input
@@ -441,7 +450,7 @@ function QueueingState()
     );
     this.addHandler('loading', function(event)
         {
-            const gamestate_str = 'Loading song ' + event.current + ' out of ' + event.total + '...';
+            const gamestate_str = 'Choosing song ' + event.current + ' out of ' + event.total + '...';
             document.getElementById("gamestate").innerHTML = gamestate_str;
 
             lobby.num_rounds = event.total;
@@ -460,6 +469,9 @@ function GuessingState()
             // Set the game state
             document.getElementById("gamestate").innerHTML = 'Round ' + video.round + '/' + lobby.num_rounds;
 
+            // Show the volume slider
+            showVolume();
+
             // Show the countdown
             showCountdown();
 
@@ -469,8 +481,8 @@ function GuessingState()
             // Load the video
             startVideo();
 
-            // Show input box
-            showInput(false);
+            // Show input box, and disable if spectating
+            showInput(lobby.players.some(player => player.username == local_username && player.spectator));
 
             // Show active players and spectators
             showActivePlayers();
@@ -523,6 +535,9 @@ function ViewingState()
         },
         function()  // onExit
         {
+            // Hide the volume button
+            hideVolume();
+
             // Hide the video
             hideVideo();
 

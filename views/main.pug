@@ -1,6 +1,7 @@
 extends layout
 
 block content
+  h3 Dashboard
   ul
     li
       a(href="/lobby/create") Create a lobby
@@ -17,8 +18,16 @@ block content
     li
       a(href="/logout") Log out
   
+  h3 Note:
+  p
+    | If you're playing with Google Chrome, it's recommended that you disable hardware media key handling at:
+    br
+    a(href="chrome://flags/#hardware-media-key-handling" target="_blank") chrome://flags/#hardware-media-key-handling
+    br
+    | This prevents the song title from being visible when adjusting system volume
+  
   if new_features != undefined && new_features.length != 0
-    h2 New Features:
+    h3 New Features:
 
     ul
     each feature in new_features

@@ -3,6 +3,10 @@
 const features =
 [
     {
+        date: new Date('September 6, 2020 21:30:00'),
+        value: 'Added a video volume slider.'
+    },
+    {
         date: new Date('September 6, 2020 20:00:00'),
         value: 'Lobbies with spaces in the name now function properly.'
     },

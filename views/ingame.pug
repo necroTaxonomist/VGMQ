@@ -37,12 +37,16 @@ block content
     input(id="reset_settings" type="button" value="Reset" disabled)
     input(id="submit_settings" type="button" value="Apply" disabled)
 
+  p(id="volumecontrols" hidden)
+    | Volume: 
+    input(id="volume" type="range" min="0" max="100" value="100")
+
   h1(id="countdown" hidden)
 
   div(id="videosection" hidden)
     h3(id="videoname") Game Name
     h4(id="songname") Song Name
-    iframe(id="video" src="" allow="autoplay" frameborder="0")
+    div(id="video")
 
   form(id="inputsection" autocomplete="off" hidden)
     p
@@ -66,6 +70,7 @@ block content
   script(src="/javascript/searchgames.js")
   script(src="/javascript/statemachine.js")
   script(src="/javascript/clientstatemachine.js")
+  script(src="https://www.youtube.com/iframe_api")
   script.
     window.addEventListener('load', async function()
       {
@@ -78,6 +83,8 @@ block content
 
     document.getElementById("reset_settings").onclick = showGameSettings;
     document.getElementById("submit_settings").onclick = submitGameSettings;
+
+    document.getElementById("volume").onchange = updateVolume;
 
     autocomplete(document.getElementById("inputbox"), submitInput);
 
@@ -93,6 +100,26 @@ block content
     document.getElementById("readybutton").onclick = sendReady;
     document.getElementById("startbutton").onclick = sendStart;
 
+  script.
+    function onYouTubeIframeAPIReady()
+    {
+        var playerSettings = 
+        {
+          playerVars:
+          {
+            autoplay: 1,
+            controls: 0,
+            disablekb: 1,
+            enablejsapi: 1,
+            fs: 0,
+            modestbranding: 1,
+            playsinline: 1
+          }
+        };
+
+        // This declaration is in clientstatemachine
+        ytPlayer = new YT.Player('video', playerSettings);
+    }
 
   if username == 'Admin'
     p
