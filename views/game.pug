@@ -30,7 +30,8 @@ block content
 
   ol
     each song in playlist.songs
-      li
+      li(class="songitem")
+        input(class="checkmark" type="checkbox" checked=(!game.blocked_ids.includes(song.id) && !song.short && !song.restricted) disabled=(song.short || song.restricted) name=song.id)
         if song.restricted
           | 🚫
         if song.short
@@ -43,3 +44,47 @@ block content
       input(name="game_name" type="hidden" value=game.game_name)
       input(name="source_url" type="hidden" value="/games")
       button(type="submit" style={color: 'red'}) Delete Game
+  
+  form(id="blockform" action="/games/block" method="POST")
+    input(name="game_name" type="hidden" id="blockname" value=game.game_name)
+    input(name="video_id" type="hidden" id="blockid")
+    input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
+
+  form(id="unblockform" action="/games/unblock" method="POST")
+    input(name="game_name" type="hidden" id="unblockname" value=game.game_name)
+    input(name="video_id" type="hidden" id="unblockid")
+    input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
+
+  script(src="/javascript/xhttp.js")
+  script.
+    var blockform = document.getElementById("blockform");
+    var blockid = document.getElementById("blockid");
+
+    var unblockform = document.getElementById("unblockform");
+    var unblockid = document.getElementById("unblockid");
+
+    var items = document.getElementsByClassName("songitem");
+
+    for (item of items)
+    {
+      var checkmark = item.getElementsByClassName("checkmark")[0];
+
+      if (checkmark)
+      {
+        checkmark.onclick = function()
+        {
+          if (this.checked)
+          {
+            unblockid.value = this.name;
+            xhttpAsyncForm("/games/unblock", new FormData(unblockform));
+          }
+          else
+          {
+            blockid.value = this.name;
+            xhttpAsyncForm("/games/block", new FormData(blockform));
+          }
+        }
+      }
+    }
+  
+  script(src="/javascript/searchgames.js")

@@ -47,6 +47,8 @@ block content
     h3(id="videoname") Game Name
     h4(id="songname") Song Name
     div(id="video")
+    br
+    button(id="reportbutton" disabled) Report Song
 
   form(id="inputsection" autocomplete="off" hidden)
     p
@@ -86,6 +88,8 @@ block content
 
     document.getElementById("volume").onchange = updateVolume;
 
+    document.getElementById("reportbutton").onclick = reportSong;
+
     autocomplete(document.getElementById("inputbox"), submitInput);
 
     document.getElementById("inputbox").onkeydown = function()
@@ -105,6 +109,8 @@ block content
     {
         var playerSettings = 
         {
+          width: 560,
+          height: 340,
           playerVars:
           {
             autoplay: 1,

@@ -3,6 +3,10 @@
 const features =
 [
     {
+        date: new Date('September 7, 2020 10:30:00'),
+        value: 'Individual songs may be excluded from gameplay. Try the "Report Song" button for bad links!'
+    },
+    {
         date: new Date('September 7, 2020 09:00:00'),
         value: 'Fixed criteria for restricted videos (probably).'
     },

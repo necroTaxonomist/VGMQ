@@ -172,6 +172,9 @@ function showVideo()
     // Set the song name
     document.getElementById("songname").innerHTML = video.song_name;
 
+    // Enable the report button
+    document.getElementById("reportbutton").disabled = false;
+
     // Unhide
     document.getElementById("videosection").hidden = false;
 }
@@ -183,6 +186,15 @@ function hideVideo()
 
     // Stop the video
     ytPlayer.stopVideo();
+}
+
+function reportSong()
+{
+    // Send a report for the current video
+    socket.emit('report', video);
+
+    // Disable the report button
+    document.getElementById("reportbutton").disabled = true;
 }
 
 // Show the game name input

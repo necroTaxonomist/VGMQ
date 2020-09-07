@@ -310,6 +310,14 @@ function HostStateMachine(name, password = '')
             }
         );
 
+        // Report song
+        socket.on('report', async (video) =>
+            {
+                console.log('Received report for game_name=' + video.game_name + ', video_id=' + video.video_id);
+                await gamesdb.addBlockedId(video.game_name, video.video_id);
+            }
+        );
+
         // Disconnected
         socket.on('disconnect', async () =>
             {
@@ -447,6 +455,9 @@ function HostStateMachine(name, password = '')
 
             // Filter out songs that are restricted or too short
             playlist.songs = playlist.songs.filter(song => !song.restricted && !song.short);
+
+            // Filter out songs that are blocked
+            playlist.songs = playlist.songs.filter(song => !game.blocked_ids.includes(song.id));
 
             // Choose the song select criterion
             let prop = undefined;

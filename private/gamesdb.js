@@ -31,7 +31,8 @@ var gameSchema = new mongoose.Schema(
                 },
                 message: 'Failed to validate playlist ID.'
             }
-        }
+        },
+        blocked_ids: []
     },
     { collection: 'games' }
 );
@@ -160,6 +161,26 @@ async function idsToGames(ids)
     ).sort('game_name');
 }
 
+// Informs the database that a given video ID should not play in game
+// Returns a Promise
+async function addBlockedId(game_name, video_id)
+{
+    var query = { game_name: game_name };
+    var update = { $addToSet: { blocked_ids: video_id } };
+
+    return gameModel.findOneAndUpdate(query, update).exec();
+}
+
+// Informs the database that a given video ID should not play in game
+// Returns a Promise
+async function removeBlockedId(game_name, video_id)
+{
+    var query = { game_name: game_name };
+    var update = { $pull: { blocked_ids: video_id } };
+
+    return gameModel.findOneAndUpdate(query, update).exec();
+}
+
 module.exports =
 {
     create,
@@ -169,5 +190,7 @@ module.exports =
     allNames,
     idsToNames,
     searchNames,
-    idsToGames
+    idsToGames,
+    addBlockedId,
+    removeBlockedId
 }

@@ -205,4 +205,38 @@ async function removeGame(req, res, next)
 }
 router.post('/remove', removeGame);
 
+/* POST to block a song */
+async function blockSong(req, res, next)
+{
+    try
+    {
+        await usersdb.auth(req.session.username, req.session.password);
+        await gamesdb.addBlockedId(req.body.game_name, req.body.video_id);
+        res.redirect(req.body.source_url);
+    }
+    catch (err)
+    {
+        var string = encodeURIComponent(err);
+        res.redirect(req.body.source_url + '?err=' + err);
+    }
+}
+router.post('/block', blockSong);
+
+/* POST to unblock a song */
+async function unblockSong(req, res, next)
+{
+    try
+    {
+        await usersdb.auth(req.session.username, req.session.password);
+        await gamesdb.removeBlockedId(req.body.game_name, req.body.video_id);
+        res.redirect(req.body.source_url);
+    }
+    catch (err)
+    {
+        var string = encodeURIComponent(err);
+        res.redirect(req.body.source_url + '?err=' + err);
+    }
+}
+router.post('/unblock', unblockSong);
+
 module.exports = router;

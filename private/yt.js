@@ -124,9 +124,9 @@ async function getPlaylistWithSongs(id)
             let restricted = false;
             if (item.contentDetails.regionRestriction != undefined)
             {
-                if (item.contentDetails.regionRestriction.allowed != undefined)
+                if (item.contentDetails.licensedContent)
                 {
-                    // May be allowed in US, but can only play through YT
+                    // Licensed content can't be played embedded
                     restricted = true;
                 }
                 if (item.contentDetails.regionRestriction.blocked)
@@ -138,7 +138,7 @@ async function getPlaylistWithSongs(id)
                     }
                 }
             }
-            if (item.status.uploadStatus !== 'uploaded' && item.status.uploadStatus !== 'processed')
+            if (item.status.uploadStatus !== 'processed')
             {
                 // Video was not successfully uploaded
                 restricted = true;
