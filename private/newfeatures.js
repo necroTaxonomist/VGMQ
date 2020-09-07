@@ -3,6 +3,10 @@
 const features =
 [
     {
+        date: new Date('September 7, 2020 09:00:00'),
+        value: 'Fixed criteria for restricted videos (probably).'
+    },
+    {
         date: new Date('September 6, 2020 21:30:00'),
         value: 'Added a video volume slider.'
     },

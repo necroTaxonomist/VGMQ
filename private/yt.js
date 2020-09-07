@@ -121,7 +121,38 @@ async function getPlaylistWithSongs(id)
         // For each item, write to the playlist
         for (item of res.data.items)
         {
-            let restricted = item.contentDetails.regionRestriction != undefined;
+            let restricted = false;
+            if (item.contentDetails.regionRestriction != undefined)
+            {
+                if (item.contentDetails.regionRestriction.allowed != undefined)
+                {
+                    // May be allowed in US, but can only play through YT
+                    restricted = true;
+                }
+                if (item.contentDetails.regionRestriction.blocked)
+                {
+                    if (item.contentDetails.regionRestriction.blocked.includes('US'))
+                    {
+                        // Blocked in the US
+                        restricted = true;
+                    }
+                }
+            }
+            if (item.status.uploadStatus !== 'uploaded' && item.status.uploadStatus !== 'processed')
+            {
+                // Video was not successfully uploaded
+                restricted = true;
+            }
+            if (item.status.privacyStatus === 'private')
+            {
+                // Video is private
+                restricted = true;
+            }
+            if (item.status.embeddable === false)
+            {
+                // Cannot embed this video
+                restricted = true;
+            }
 
             let duration = parseDuration(item.contentDetails.duration);
             let short = (duration.minutes == 0) &&
