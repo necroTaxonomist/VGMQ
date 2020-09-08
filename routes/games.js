@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var createError = require('http-errors');
 
+var yt = require('../private/yt');
 var usersdb = require('../private/usersdb');
 var gamesdb = require('../private/gamesdb');
 var songsdb = require('../private/songsdb');
@@ -159,7 +160,7 @@ async function addGame(req, res, next)
         await usersdb.auth(req.session.username, req.session.password);
 
         var game_name = req.body.game_name;
-        var playlist_id = require('../private/yt').playlistUrlToId(req.body.playlist_url);
+        var playlist_id = yt.playlistUrlToId(req.body.playlist_url);
 
         await gamesdb.create(game_name, playlist_id);
 

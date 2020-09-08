@@ -22,10 +22,22 @@ var gameModel = mongoose.model('game', gameSchema);
 // Returns a Query
 function create(name, playlist_id)
 {
+    // Create all the songs on the playlist
+    var songs = songsdb.createFromPlaylistId(this.playlist_id);
+
+    // Get the song object ids
+    var ids = [];
+    for (song of songs)
+    {
+        ids.push(_id);
+    }
+
+    // Create the game
     var game = new gameModel(
         {
             game_name: name,
-            playlist_id: playlist_id
+            playlist_id: playlist_id,
+            songs: ids
         }
     );
 

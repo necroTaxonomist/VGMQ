@@ -52,6 +52,9 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+// start the mongo database connection
+var db = require('./private/database');
+
 module.exports =
 {
   app: app,

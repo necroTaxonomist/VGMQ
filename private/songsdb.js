@@ -142,14 +142,14 @@ async function createFromPlaylistId(playlistId)
 // Returns a Query
 function find(ids)
 {
-    return gameModel.find({  _id: { $in: ids }  });
+    return songModel.find({  _id: { $in: ids }  });
 }
 
 // Get a song
 // Returns a Query
 function findOne(id)
 {
-    return gameModel.findOne({ _id: id });
+    return songModel.findOne({ _id: id });
 }
 
 module.exports =

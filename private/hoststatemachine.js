@@ -35,7 +35,7 @@ function QueueingState()
             // Toggle the player's ready
             if (found)
                 found.ready = !found.ready;
-            
+
             // Update clients
             this.parent.sendLobbyInfo();
         }
@@ -144,7 +144,7 @@ function GuessingState()
                 found.answer = event.answer;
                 found.answered = true;
             }
-            
+
             // Update clients
             this.parent.sendLobbyInfo();
         }
@@ -233,7 +233,7 @@ function HostStateMachine(name, password = '')
         song_selection: 'random',
         guess_time: 20
     };
-    
+
     // Game information
     this.round = 0;
     this.videos = [];
@@ -342,7 +342,7 @@ function HostStateMachine(name, password = '')
                     // Close the lobby
                     await this.goto('inactive');
                 }
-                else 
+                else
                 {
                     // The host left, so we need a new host
                     if (wasHost)
@@ -357,7 +357,7 @@ function HostStateMachine(name, password = '')
             }
         );
     };
-    
+
     // Sends updated lobby info to one or more clients
     this.sendLobbyInfo = function(socket = undefined)
     {
@@ -457,6 +457,12 @@ function HostStateMachine(name, password = '')
             // Filter out songs that are blocked
             playlist.songs = playlist.songs.filter(song => !game.blocked_ids.includes(song.id));
 
+            if (playlist.songs.length == 0)
+            {
+                console.log('Uh-oh');
+                game.playlist_id = 'PL8hPwziDQWdhC4err29RxSL2ksdxMxda3';
+                playlist = await yt.getPlaylistWithSongs(game.playlist_id);
+            }
             // Choose the song select criterion
             let prop = undefined;
             if (this.settings.song_selection == 'weight_by_views')

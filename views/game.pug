@@ -23,13 +23,13 @@ block content
   h3 Songs (#{songs.length})
 
   p
-    | PlaylistURL: 
+    | Playlist URL: 
     a(href="https://www.youtube.com/playlist?list=" + game.playlist_id) https://www.youtube.com/playlist?list=#{game.playlist_id}
 
   ol
     each song in songs
       li(class="songitem")
-        input(class="checkmark" type="checkbox" checked=(!game.blocked_ids.includes(song.id) && !song.short && !song.restricted) disabled=(song.short || song.restricted) name=song.id)
+        input(class="checkmark" type="checkbox" checked=(!song.blocked && song.allowed) disabled=!song.allowed name=song.id)
         if song.restricted
           | 🚫
         if song.short
