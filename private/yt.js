@@ -5,12 +5,12 @@ var apiKey;
 var youtube;
 
 // Get the API key from a text file
-const fs = require('fs') 
+const fs = require('fs')
 fs.readFile('key.txt', function (err, data)
-    { 
+    {
         if (err)
             throw err;
-        
+
         apiKey = data.toString();
         youtube = google.youtube(
             {
@@ -57,7 +57,7 @@ async function getPlaylist(id)
     var playlist_snippet = playlist_res.data.items[0].snippet;
 
     // Create the output struct
-    var playlist = 
+    var playlist =
     {
         title: playlist_snippet.title,
         id: id,
@@ -74,7 +74,7 @@ async function getPlaylistWithSongs(id)
     var nextPageToken = undefined;
 
     // Query for playlist items
-    var playlist_items_query = 
+    var playlist_items_query =
     {
         playlistId: id,
         part: 'snippet',
@@ -102,7 +102,7 @@ async function getPlaylistWithSongs(id)
     while (playlist_items_query.pageToken != undefined);
 
     // Query for videos
-    var videos_query = 
+    var videos_query =
     {
         id: video_ids.slice(0, 50).join(','),
         part: 'snippet,contentDetails,statistics,status'
@@ -181,7 +181,7 @@ function parseDuration(str)  // Parses an ISO 8601 duration
 
     var matches = str.match(re);
 
-    var date = 
+    var date =
     {
         sign: (matches[1] === undefined) ? '+' : '-',
         years: (matches[2] === undefined) ? 0 : parseInt(matches[2]),
@@ -196,10 +196,9 @@ function parseDuration(str)  // Parses an ISO 8601 duration
     return date;
 }
 
-module.exports = 
+module.exports =
 {
     playlistUrlToId,
     getPlaylist,
     getPlaylistWithSongs
 };
-
