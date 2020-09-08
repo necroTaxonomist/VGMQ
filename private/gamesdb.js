@@ -10,32 +10,6 @@ var gameSchema = new mongoose.Schema(
         name: String,
         game_name: { type: String, index: true, unique: true, required: true },
         playlist_id: { type: String, required: true },
-        songs:
-        {
-            type: [mongoose.Schema.Types.ObjectId],
-            default: function()
-            {
-                try
-                {
-                    // Create all the songs on the playlist
-                    var songs = songsdb.createFromPlaylistId(this.playlist_id);
-
-                    // Get the song object ids
-                    var ids = [];
-                    for (song of songs)
-                    {
-                        ids.push(_id);
-                    }
-
-                    // Return the ids
-                    return ids;
-                }
-                catch (err)
-                {
-                    return undefined;
-                }
-            }
-        },
         blocked_ids: []  // Legacy
     },
     { collection: 'games' }
