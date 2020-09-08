@@ -2,10 +2,9 @@ var express = require('express');
 var router = express.Router();
 var createError = require('http-errors');
 
-var yt = require('../private/yt');
-var db = require('../private/database');
 var usersdb = require('../private/usersdb');
 var gamesdb = require('../private/gamesdb');
+var songsdb = require('../private/songsdb');
 
 function customSort(a, b)
 {
@@ -127,16 +126,19 @@ async function gamePage(req, res, next)
     // Get the current user
     var currentuser = await usersdb.get(req.session.username);
 
-    try  // Get the game
+    try
     {
+        // Get the game
         var game = await gamesdb.get(game_name);
-        var playlist = await yt.getPlaylistWithSongs(game.playlist_id);
+
+        // Get all the songs for the game
+        var songs = await songsdb.find(game.songs);
 
         var content =
         {
             currentuser: currentuser,
             game: game,
-            playlist: playlist
+            songs: songs
         }
 
         res.render('game', content);
@@ -157,7 +159,7 @@ async function addGame(req, res, next)
         await usersdb.auth(req.session.username, req.session.password);
 
         var game_name = req.body.game_name;
-        var playlist_id = yt.playlistUrlToId(req.body.playlist_url);
+        var playlist_id = require('../private/yt').playlistUrlToId(req.body.playlist_url);
 
         await gamesdb.create(game_name, playlist_id);
 

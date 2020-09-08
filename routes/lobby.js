@@ -2,10 +2,7 @@ var express = require('express');
 var router = express.Router();
 var createError = require('http-errors');
 
-var yt = require('../private/yt');
-var db = require('../private/database');
 var usersdb = require('../private/usersdb');
-var gamesdb = require('../private/gamesdb');
 
 var matchmaking = require('../private/matchmaking');
 

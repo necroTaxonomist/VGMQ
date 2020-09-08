@@ -52,9 +52,6 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-// initialize the socket interface
-require('./private/socket').init(io);
-
 module.exports =
 {
   app: app,

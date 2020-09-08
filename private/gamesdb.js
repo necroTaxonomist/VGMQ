@@ -1,55 +1,66 @@
 // MongoDB database
 var mongoose = require('mongoose');
-var db = require('../private/database');
-const { names } = require('debug');
 
-// YouTube database
-var yt = require('../private/yt');
+// Songs database
+var songsdb = require('../private/songsdb');
 
 // Game Schema
 var gameSchema = new mongoose.Schema(
     {
         name: String,
         game_name: { type: String, index: true, unique: true, required: true },
-        playlist_id:
+        playlist_id: { type: String, required: true },
+        songs:
         {
-            type: String,
-            required: true,
-            validate:
+            type: [mongoose.Schema.Types.ObjectId],
+            default: function()
             {
-                validator: async function(id)
+                try
                 {
-                    try
+                    // Create all the songs on the playlist
+                    var songs = songsdb.createFromPlaylistId(this.playlist_id);
+
+                    // Get the song object ids
+                    var ids = [];
+                    for (song of songs)
                     {
-                        await yt.getPlaylist(id);
-                        return true;
+                        ids.push(_id);
                     }
-                    catch (err)
-                    {
-                        return false;
-                    }
-                },
-                message: 'Failed to validate playlist ID.'
+
+                    // Return the ids
+                    return ids;
+                }
+                catch (err)
+                {
+                    return undefined;
+                }
             }
         },
-        blocked_ids: []
+        blocked_ids: []  // Legacy
     },
     { collection: 'games' }
 );
 
-// User Model
+// Game Model
 var gameModel = mongoose.model('game', gameSchema);
 
 // Create a new game
 // Returns a Query
 function create(name, playlist_id)
 {
-    return gameModel.create(
+    var game = new gameModel(
         {
             game_name: name,
             playlist_id: playlist_id
         }
     );
+
+    if (game.songs == undefined)
+    {
+        throw 'Unable to load songs from YouTube playlist';
+    }
+
+    return gameModel.create(save);
 }
 
 // Get the game with the given name

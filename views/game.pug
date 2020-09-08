@@ -20,23 +20,21 @@ block content
       input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
       button(type="submit") Add to my library
 
-  h3 Songs (#{playlist.songs.length})
+  h3 Songs (#{songs.length})
 
   p
-  | Playlist Title: #{playlist.title}
-  br
-  | URL: 
-  a(href="https://www.youtube.com/playlist?list=" + playlist.id) https://www.youtube.com/playlist?list=#{playlist.id}
+    | PlaylistURL: 
+    a(href="https://www.youtube.com/playlist?list=" + game.playlist_id) https://www.youtube.com/playlist?list=#{game.playlist_id}
 
   ol
-    each song in playlist.songs
+    each song in songs
       li(class="songitem")
         input(class="checkmark" type="checkbox" checked=(!game.blocked_ids.includes(song.id) && !song.short && !song.restricted) disabled=(song.short || song.restricted) name=song.id)
         if song.restricted
           | 🚫
         if song.short
           | ⏩
-        a(href="https://www.youtube.com/watch?v=" + song.id + "&list=" + playlist.id target="_blank") #{song.title}
+        a(href="https://www.youtube.com/watch?v=" + song.id + "&list=" + game.playlist_id target="_blank") #{song.title}
         |  (#{song.views} views, #{song.likes} likes)
 
   form(action="/games/remove" method="POST" onsubmit="return confirm('Delete this game?');")

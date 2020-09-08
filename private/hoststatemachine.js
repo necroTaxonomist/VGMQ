@@ -1,9 +1,7 @@
 
 var statemachine = require('../public/javascript/statemachine');
-var socket = require('./socket');
 
 // Databases
-var yt = require('../private/yt');
 var usersdb = require('../private/usersdb');
 var gamesdb = require('../private/gamesdb');
 

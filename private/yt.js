@@ -21,6 +21,9 @@ fs.readFile('key.txt', function (err, data)
     }
 );
 
+// Max 50 items per request
+const MAX_PER_REQUEST = 50;
+
 function playlistUrlToId(url)
 {
     const re = /(?:https?:\/\/)?(?:www.)?youtube.com\/playlist(?:\?\S+=\S+)*\?list=(\S+)(?:\?\S+=\S+)*/;
@@ -196,10 +199,112 @@ function parseDuration(str)  // Parses an ISO 8601 duration
     return date;
 }
 
+async function queryPlaylist(id, part = 'snippet')
+{
+    // Query YouTube for a playlist
+    var query =
+    {
+        id: id,
+        part: part
+    }
+
+    // Make a single query
+    var response = await youtube.playlists.list(query);
+
+    // Check the data to make sure it is a playlist
+    if (response.data.kind != 'youtube#playlistListResponse')
+    {
+        throw 'ID is not a playlist.';
+    }
+
+    // Return the first item from the response
+    return data.items[0];
+}
+
+async function queryPlaylistItems(id, part = 'snippet')
+{
+    var nextPageToken = undefined;
+
+    // Query for playlist items
+    var query = 
+    {
+        playlistId: id,
+        part: part,
+        maxResults: MAX_PER_REQUEST
+    }
+
+    // Start a list of all returned items
+    var allItems = [];
+
+    // Keep querying results
+    do
+    {
+        // Query YouTube for playlist items
+        var response = await youtube.playlistItems.list(query);
+
+        // Get the next page from the data
+        query.pageToken = response.data.nextPageToken;
+
+        // For each item, get the ID
+        for (item of res.data.items)
+        {
+            allitems.push(item);
+        }
+    }
+    while (query.pageToken != undefined);
+
+    // Return all the items
+    return allItems;
+}
+
+async function queryVideos(ids, part = 'snippet')
+{
+    // Deep copy an array of video ids
+    var videoIds = [];
+    for (id of ids)
+    {
+        videoIds.push(id);
+    }
+
+    // Query for videos
+    var query = 
+    {
+        id: videoIds.slice(0, MAX_PER_REQUEST).join(','),
+        part: part
+    };
+
+    // Start a list of all returned items
+    var allItems = [];
+
+    // Keep querying results
+    while (videoIds.length != 0)
+    {
+        // Query YouTube for videos
+        var response = await youtube.videos.list(query);
+
+        // Remove the returned ids and update the query
+        videoIds = videoIds.slice(MAX_PER_REQUEST);
+        videoIds.id = videoIds.slice(0, MAX_PER_REQUEST).join(',');
+
+        // For each item, write to the playlist
+        for (item of res.data.items)
+        {
+            allItems.push(item);
+        }
+    }
+
+    // Return all the items
+    return allItems;
+}
+
 module.exports = 
 {
     playlistUrlToId,
-    getPlaylist,
-    getPlaylistWithSongs
+    getPlaylist,  // Deprecated
+    getPlaylistWithSongs,  // Deprecated
+
+    queryPlaylist,
+    queryPlaylistItems,
+    queryVideos
 };
 
