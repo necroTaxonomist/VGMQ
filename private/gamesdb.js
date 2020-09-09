@@ -10,6 +10,7 @@ var gameSchema = new mongoose.Schema(
         name: String,
         game_name: { type: String, index: true, unique: true, required: true },
         playlist_id: { type: String, required: true },
+        songs: { type: [mongoose.Schema.Types.ObjectId], default: undefined },
         blocked_ids: []  // Legacy
     },
     { collection: 'games' }
@@ -29,7 +30,7 @@ function create(name, playlist_id)
     var ids = [];
     for (song of songs)
     {
-        ids.push(_id);
+        ids.push(song._id);
     }
 
     // Create the game
@@ -178,6 +179,36 @@ async function removeBlockedId(game_name, video_id)
     return gameModel.findOneAndUpdate(query, update).exec();
 }
 
+// Returns a promise
+async function updateSongs(game_name)
+{
+    // Get the game
+    var game = await get(game_name);
+
+    // Create all the songs on the playlist
+    var songs = await songsdb.createFromPlaylistId(game.playlist_id);
+
+    // Convert from legacy block method
+    if (game.blocked_ids != undefined)
+    {
+        await songsdb.blockVideoIds(game.blocked_ids);
+        await gameModel.updateOne({ game_name: game_name }, { blocked_ids : undefined});
+    }
+
+    // Get the song object ids
+    var ids = [];
+    for (song of songs)
+    {
+        ids.push(song._id);
+    }
+
+    // Clear the array first
+    var query = { game_name: game_name };
+    var update = {  $set: { songs: ids }  };
+    var options = { new: true };
+    return gameModel.findOneAndUpdate(query, update, options).exec();
+}
+
 module.exports =
 {
     create,
@@ -189,5 +220,6 @@ module.exports =
     searchNames,
     idsToGames,
     addBlockedId,
-    removeBlockedId
+    removeBlockedId,
+    updateSongs
 }

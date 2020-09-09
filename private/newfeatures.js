@@ -3,6 +3,10 @@
 const features =
 [
     {
+        date: new Date('September 8, 2020 22:00:00'),
+        value: 'YouTube metadata for videos is now kept in a local database. Game start times should decrease as the database builds.'
+    },
+    {
         date: new Date('September 7, 2020 10:30:00'),
         value: 'Individual songs may be excluded from gameplay. Try the "Report Song" button for bad links!'
     },

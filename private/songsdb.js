@@ -10,10 +10,11 @@ var songSchema = new mongoose.Schema(
         name: String,
         video_id: { type: String, index: true, unique: true, required: true },
         title: { type: String, required: true },
-        views: { type: Number, required: true },
-        likes: { type: Number, required: true },
-        restricted: { type: Boolean, required: true },
-        short: { type: Boolean, required: true },
+        views: Number,
+        likes: Number,
+        duration: mongoose.Mixed,
+        restricted: Boolean,
+        short: Boolean,
         blocked: { type: Boolean, default: false}
     },
     { collection: 'songs' }
@@ -61,7 +62,7 @@ function itemToSong(item)
         restricted = true;
     }
 
-    var duration = parseDuration(item.contentDetails.duration);
+    var duration = yt.parseDuration(item.contentDetails.duration);
     var short = (duration.minutes == 0) &&
                 (duration.hours == 0) &&
                 duration.seconds < 30;
@@ -72,6 +73,7 @@ function itemToSong(item)
         title: item.snippet.title,
         views: item.statistics.viewCount,
         likes: item.statistics.likeCount,
+        duration: duration,
         restricted: restricted,
         short: short
     };
@@ -116,9 +118,11 @@ async function createFromPlaylistId(playlistId)
 
     // Get the video IDs
     var ids = [];
-    for (item in playlistItems)
+    var all_ids = [];
+    for (item of playlistItems)
     {
         ids.push(item.snippet.resourceId.videoId);
+        all_ids.push(item.snippet.resourceId.videoId);
     }
 
     // Get videos from youtube
@@ -128,14 +132,42 @@ async function createFromPlaylistId(playlistId)
     var songs = [];
 
     // For each returned item
-    for (item in items)
+    for (item of items)
     {
         // Convert to database format
         songs.push(itemToSong(item));
     }
 
-    // Write to the database
-    return songModel.create(songs).exec();
+    // Some of the songs may be in the database,
+    // so do a search query for them first
+    var present_songs = await songModel.find({  video_id: { $in: ids }  }).select('video_id');
+
+    // For each song in our list
+    for (i = 0; i < songs.length; i += 1)
+    {
+        // Get the song
+        var song = songs[i];
+
+        // Check if already present
+        if(present_songs.some(p => p.video_id == song.video_id))
+        {
+            // Update
+            await songModel.updateOne({video_id : song.video_id}, song);
+
+            // Remove from songs
+            songs.splice(i, 1);
+            i -= 1;
+        }
+    }
+
+    // Write remaining songs to the database
+    if (songs.length != 0)
+    {
+        await songModel.create(songs);
+    }
+
+    // Query the database again for all the songs
+    return await songModel.find({ video_id: { $in: all_ids } }).select('_id');
 }
 
 // Find multiple songs
@@ -152,10 +184,29 @@ function findOne(id)
     return songModel.findOne({ _id: id });
 }
 
+// Blocks/unblocks a song
+// Returns a Query
+function setBlocked(id, blocked = true)
+{
+    return songModel.findByIdAndUpdate(id, { blocked: blocked });
+}
+
+// Blocks a video with the given video ID
+// Needed to convert from the legacy method of blocking songs
+// Returns a Query
+function blockVideoIds(video_ids)
+{
+    var filter = { video_id : video_ids };
+    var update = { blocked: true };
+    return songModel.updateMany(filter, update);
+}
+
 module.exports =
 {
     createFromVideoId,
     createFromPlaylistId,
     find,
-    findOne
+    findOne,
+    setBlocked,
+    blockVideoIds
 };

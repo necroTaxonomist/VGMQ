@@ -165,7 +165,7 @@ async function getPlaylistWithSongs(id)
             playlist.songs.push(
                 {
                     title: item.snippet.title,
-                    id: item.id,
+                    video_id: item.id,
                     views: item.statistics.viewCount,
                     likes: item.statistics.likeCount,
                     restricted: restricted,
@@ -187,10 +187,6 @@ function parseDuration(str)  // Parses an ISO 8601 duration
     var date =
     {
         sign: (matches[1] === undefined) ? '+' : '-',
-        years: (matches[2] === undefined) ? 0 : parseInt(matches[2]),
-        months: (matches[3] === undefined) ? 0 : parseInt(matches[3]),
-        weeks: (matches[4] === undefined) ? 0 : parseInt(matches[4]),
-        days: (matches[5] === undefined) ? 0 : parseInt(matches[5]),
         hours: (matches[6] === undefined) ? 0 : parseInt(matches[6]),
         minutes: (matches[7] === undefined) ? 0 : parseInt(matches[7]),
         seconds: (matches[8] === undefined) ? 0 : parseInt(matches[8])
@@ -218,7 +214,7 @@ async function queryPlaylist(id, part = 'snippet')
     }
 
     // Return the first item from the response
-    return data.items[0];
+    return response.data.items[0];
 }
 
 async function queryPlaylistItems(id, part = 'snippet')
@@ -246,9 +242,9 @@ async function queryPlaylistItems(id, part = 'snippet')
         query.pageToken = response.data.nextPageToken;
 
         // For each item, get the ID
-        for (item of res.data.items)
+        for (item of response.data.items)
         {
-            allitems.push(item);
+            allItems.push(item);
         }
     }
     while (query.pageToken != undefined);
@@ -283,11 +279,11 @@ async function queryVideos(ids, part = 'snippet')
         var response = await youtube.videos.list(query);
 
         // Remove the returned ids and update the query
-        videoIds = videoIds.slice(MAX_PER_REQUEST);
-        videoIds.id = videoIds.slice(0, MAX_PER_REQUEST).join(',');
+        videoIds = videoIds.slice(response.data.items.length);
+        query.id = videoIds.slice(0, MAX_PER_REQUEST).join(',');
 
         // For each item, write to the playlist
-        for (item of res.data.items)
+        for (item of response.data.items)
         {
             allItems.push(item);
         }
@@ -303,6 +299,7 @@ module.exports =
     getPlaylist,  // Deprecated
     getPlaylistWithSongs,  // Deprecated
 
+    parseDuration,
     queryPlaylist,
     queryPlaylistItems,
     queryVideos

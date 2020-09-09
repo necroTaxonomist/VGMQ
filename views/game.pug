@@ -29,12 +29,12 @@ block content
   ol
     each song in songs
       li(class="songitem")
-        input(class="checkmark" type="checkbox" checked=(!song.blocked && song.allowed) disabled=!song.allowed name=song.id)
+        input(class="checkmark" type="checkbox" checked=(!song.blocked && song.allowed) disabled=(!song.blocked && !song.allowed) name=song._id)
         if song.restricted
           | 🚫
         if song.short
           | ⏩
-        a(href="https://www.youtube.com/watch?v=" + song.id + "&list=" + game.playlist_id target="_blank") #{song.title}
+        a(href="https://www.youtube.com/watch?v=" + song.video_id + "&list=" + game.playlist_id target="_blank") #{song.title}
         |  (#{song.views} views, #{song.likes} likes)
 
   form(action="/games/remove" method="POST" onsubmit="return confirm('Delete this game?');")
@@ -45,12 +45,12 @@ block content
   
   form(id="blockform" action="/games/block" method="POST")
     input(name="game_name" type="hidden" id="blockname" value=game.game_name)
-    input(name="video_id" type="hidden" id="blockid")
+    input(name="id" type="hidden" id="blockid")
     input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
 
   form(id="unblockform" action="/games/unblock" method="POST")
     input(name="game_name" type="hidden" id="unblockname" value=game.game_name)
-    input(name="video_id" type="hidden" id="unblockid")
+    input(name="id" type="hidden" id="unblockid")
     input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
 
   script(src="/javascript/xhttp.js")
