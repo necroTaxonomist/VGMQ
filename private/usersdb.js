@@ -1,7 +1,6 @@
 
 // MongoDB database
 var mongoose = require('mongoose');
-var db = require('../private/database');
 
 // Games database
 var gamesdb = require('../private/gamesdb');

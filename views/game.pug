@@ -20,23 +20,21 @@ block content
       input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
       button(type="submit") Add to my library
 
-  h3 Songs (#{playlist.songs.length})
+  h3 Songs (#{songs.length})
 
   p
-  | Playlist Title: #{playlist.title}
-  br
-  | URL: 
-  a(href="https://www.youtube.com/playlist?list=" + playlist.id) https://www.youtube.com/playlist?list=#{playlist.id}
+    | Playlist URL: 
+    a(href="https://www.youtube.com/playlist?list=" + game.playlist_id) https://www.youtube.com/playlist?list=#{game.playlist_id}
 
   ol
-    each song in playlist.songs
+    each song in songs
       li(class="songitem")
-        input(class="checkmark" type="checkbox" checked=(!game.blocked_ids.includes(song.id) && !song.short && !song.restricted) disabled=(song.short || song.restricted) name=song.id)
+        input(class="checkmark" type="checkbox" checked=(!song.blocked && song.allowed) disabled=(!song.blocked && !song.allowed) name=song._id)
         if song.restricted
           | 🚫
         if song.short
           | ⏩
-        a(href="https://www.youtube.com/watch?v=" + song.id + "&list=" + playlist.id target="_blank") #{song.title}
+        a(href="https://www.youtube.com/watch?v=" + song.video_id + "&list=" + game.playlist_id target="_blank") #{song.title}
         |  (#{song.views} views, #{song.likes} likes)
 
   form(action="/games/remove" method="POST" onsubmit="return confirm('Delete this game?');")
@@ -47,12 +45,12 @@ block content
   
   form(id="blockform" action="/games/block" method="POST")
     input(name="game_name" type="hidden" id="blockname" value=game.game_name)
-    input(name="video_id" type="hidden" id="blockid")
+    input(name="id" type="hidden" id="blockid")
     input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
 
   form(id="unblockform" action="/games/unblock" method="POST")
     input(name="game_name" type="hidden" id="unblockname" value=game.game_name)
-    input(name="video_id" type="hidden" id="unblockid")
+    input(name="id" type="hidden" id="unblockid")
     input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
 
   script(src="/javascript/xhttp.js")

@@ -1,55 +1,53 @@
 // MongoDB database
 var mongoose = require('mongoose');
-var db = require('../private/database');
-const { names } = require('debug');
 
-// YouTube database
-var yt = require('../private/yt');
+// Songs database
+var songsdb = require('../private/songsdb');
 
 // Game Schema
 var gameSchema = new mongoose.Schema(
     {
         name: String,
         game_name: { type: String, index: true, unique: true, required: true },
-        playlist_id:
-        {
-            type: String,
-            required: true,
-            validate:
-            {
-                validator: async function(id)
-                {
-                    try
-                    {
-                        await yt.getPlaylist(id);
-                        return true;
-                    }
-                    catch (err)
-                    {
-                        return false;
-                    }
-                },
-                message: 'Failed to validate playlist ID.'
-            }
-        },
-        blocked_ids: []
+        playlist_id: { type: String, required: true },
+        songs: { type: [mongoose.Schema.Types.ObjectId], default: undefined },
+        blocked_ids: []  // Legacy
     },
     { collection: 'games' }
 );
 
-// User Model
+// Game Model
 var gameModel = mongoose.model('game', gameSchema);
 
 // Create a new game
 // Returns a Query
 function create(name, playlist_id)
 {
-    return gameModel.create(
+    // Create all the songs on the playlist
+    var songs = songsdb.createFromPlaylistId(this.playlist_id);
+
+    // Get the song object ids
+    var ids = [];
+    for (song of songs)
+    {
+        ids.push(song._id);
+    }
+
+    // Create the game
+    var game = new gameModel(
         {
             game_name: name,
-            playlist_id: playlist_id
+            playlist_id: playlist_id,
+            songs: ids
         }
     );
+
+    if (game.songs == undefined)
+    {
+        throw 'Unable to load songs from YouTube playlist';
+    }
+
+    return gameModel.create(save);
 }
 
 // Get the game with the given name
@@ -181,6 +179,36 @@ async function removeBlockedId(game_name, video_id)
     return gameModel.findOneAndUpdate(query, update).exec();
 }
 
+// Returns a promise
+async function updateSongs(game_name)
+{
+    // Get the game
+    var game = await get(game_name);
+
+    // Create all the songs on the playlist
+    var songs = await songsdb.createFromPlaylistId(game.playlist_id);
+
+    // Convert from legacy block method
+    if (game.blocked_ids != undefined)
+    {
+        await songsdb.blockVideoIds(game.blocked_ids);
+        await gameModel.updateOne({ game_name: game_name }, { blocked_ids : undefined});
+    }
+
+    // Get the song object ids
+    var ids = [];
+    for (song of songs)
+    {
+        ids.push(song._id);
+    }
+
+    // Clear the array first
+    var query = { game_name: game_name };
+    var update = {  $set: { songs: ids }  };
+    var options = { new: true };
+    return gameModel.findOneAndUpdate(query, update, options).exec();
+}
+
 module.exports =
 {
     create,
@@ -192,5 +220,6 @@ module.exports =
     searchNames,
     idsToGames,
     addBlockedId,
-    removeBlockedId
+    removeBlockedId,
+    updateSongs
 }

@@ -1,11 +1,10 @@
 
 var statemachine = require('../public/javascript/statemachine');
-var socket = require('./socket');
 
 // Databases
-var yt = require('../private/yt');
 var usersdb = require('../private/usersdb');
 var gamesdb = require('../private/gamesdb');
+var songsdb = require('../private/songsdb');
 
 // Queueing before the game starts
 function QueueingState()
@@ -450,21 +449,27 @@ function HostStateMachine(name, password = '')
             // Send
             this.nsp.emit('loading', { current: round, total: games.length });
 
-            // Query youtube for songs
-            let playlist = await yt.getPlaylistWithSongs(game.playlist_id);
+            // The database used to not store song data,
+            // so some entries need to be updated
+            if (game.songs == undefined)
+            {
+                game = await gamesdb.updateSongs(game.game_name);
+            }
 
-            // Filter out songs that are restricted or too short
-            playlist.songs = playlist.songs.filter(song => !song.restricted && !song.short);
+            // Get all the songs for the game
+            let songs = await songsdb.find(game.songs);
 
-            // Filter out songs that are blocked
-            playlist.songs = playlist.songs.filter(song => !game.blocked_ids.includes(song.id));
+            // Filter out songs that aren't allowed
+            songs = songs.filter(song => song.allowed);
 
-            if (playlist.songs.length == 0)
+            if (songs.length == 0)
             {
                 console.log('Uh-oh');
                 game.playlist_id = 'PL8hPwziDQWdhC4err29RxSL2ksdxMxda3';
-                playlist = await yt.getPlaylistWithSongs(game.playlist_id);
+                let playlist = await require('./yt').getPlaylistWithSongs(game.playlist_id);
+                songs = playlist.songs;
             }
+
             // Choose the song select criterion
             let prop = undefined;
             if (this.settings.song_selection == 'weight_by_views')
@@ -477,23 +482,21 @@ function HostStateMachine(name, password = '')
             if (prop != undefined)  // Weighted
             {
                 // Weight using a Zipf distribution
-                setZipfWeights(playlist.songs, prop);
+                setZipfWeights(songs, prop);
 
                 // Get the sum of all weights
                 let sum = 0;
-                for (song of playlist.songs)
+                for (song of songs)
                 {
                     sum += song.weight;
                 }
 
                 // Generate a random position
                 var target_pos = this.random() * sum;
-                console.log('RNG value = ' + target_pos);
-                console.log('Max RNG value = ' + sum);
 
                 // Find the song it corresponds to
                 var current_pos = 0;
-                for (song of playlist.songs)
+                for (song of songs)
                 {
                     current_pos += song.weight;
                     if (current_pos >= target_pos)
@@ -506,8 +509,8 @@ function HostStateMachine(name, password = '')
             else  // Random
             {
                 // Pull a random song
-                var i = Math.floor(this.random() * playlist.songs.length);
-                chosen_song = playlist.songs[i];
+                var i = Math.floor(this.random() * songs.length);
+                chosen_song = songs[i];
             }
 
             // Write the video data
@@ -515,7 +518,7 @@ function HostStateMachine(name, password = '')
             {
                 round: round,
                 game_name: game.game_name,
-                video_id: chosen_song.id,
+                video_id: chosen_song.video_id,
                 song_name: chosen_song.title
             };
 

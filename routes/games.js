@@ -3,9 +3,9 @@ var router = express.Router();
 var createError = require('http-errors');
 
 var yt = require('../private/yt');
-var db = require('../private/database');
 var usersdb = require('../private/usersdb');
 var gamesdb = require('../private/gamesdb');
+var songsdb = require('../private/songsdb');
 
 function customSort(a, b)
 {
@@ -47,8 +47,6 @@ async function gamesListing(req, res, next)
     }
     catch (err)
     {
-        console.log(err);
-
         // Go to log in if not logged in
         res.redirect('/');
         return;
@@ -127,16 +125,26 @@ async function gamePage(req, res, next)
     // Get the current user
     var currentuser = await usersdb.get(req.session.username);
 
-    try  // Get the game
+    try
     {
+        // Get the game
         var game = await gamesdb.get(game_name);
-        var playlist = await yt.getPlaylistWithSongs(game.playlist_id);
+
+        // The database used to not store song data,
+        // so some entries need to be updated
+        if (game.songs == undefined)
+        {
+            game = await gamesdb.updateSongs(game_name);
+        }
+
+        // Get all the songs for the game
+        var songs = await songsdb.find(game.songs);
 
         var content =
         {
             currentuser: currentuser,
             game: game,
-            playlist: playlist
+            songs: songs
         }
 
         res.render('game', content);
@@ -161,7 +169,6 @@ async function addGame(req, res, next)
 
         await gamesdb.create(game_name, playlist_id);
 
-        console.log(req.body.addtouser)
         if (req.body.addtouser == 'on')
         {
             await usersdb.addGameToUser(game_name, req.session.username);
@@ -211,7 +218,7 @@ async function blockSong(req, res, next)
     try
     {
         await usersdb.auth(req.session.username, req.session.password);
-        await gamesdb.addBlockedId(req.body.game_name, req.body.video_id);
+        await songsdb.setBlocked(req.body.id, true);
         res.redirect(req.body.source_url);
     }
     catch (err)
@@ -228,7 +235,7 @@ async function unblockSong(req, res, next)
     try
     {
         await usersdb.auth(req.session.username, req.session.password);
-        await gamesdb.removeBlockedId(req.body.game_name, req.body.video_id);
+        await songsdb.setBlocked(req.body.id, false);
         res.redirect(req.body.source_url);
     }
     catch (err)

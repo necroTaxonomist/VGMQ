@@ -52,8 +52,8 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-// initialize the socket interface
-require('./private/socket').init(io);
+// start the mongo database connection
+var db = require('./private/database');
 
 module.exports =
 {
