@@ -163,20 +163,14 @@ async function idsToGames(ids)
 // Returns a Promise
 async function addBlockedId(game_name, video_id)
 {
-    var query = { game_name: game_name };
-    var update = { $addToSet: { blocked_ids: video_id } };
-
-    return gameModel.findOneAndUpdate(query, update).exec();
+    // No longer used
 }
 
 // Informs the database that a given video ID should not play in game
 // Returns a Promise
 async function removeBlockedId(game_name, video_id)
 {
-    var query = { game_name: game_name };
-    var update = { $pull: { blocked_ids: video_id } };
-
-    return gameModel.findOneAndUpdate(query, update).exec();
+    // No longer used
 }
 
 // Returns a promise

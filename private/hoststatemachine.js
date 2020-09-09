@@ -313,7 +313,7 @@ function HostStateMachine(name, password = '')
         socket.on('report', async (video) =>
             {
                 console.log('Received report for game_name=' + video.game_name + ', video_id=' + video.video_id);
-                await gamesdb.addBlockedId(video.game_name, video.video_id);
+                await songsdb.blockVideoIds([video.video_id]);
             }
         );
 
