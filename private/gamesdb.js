@@ -20,11 +20,11 @@ var gameSchema = new mongoose.Schema(
 var gameModel = mongoose.model('game', gameSchema);
 
 // Create a new game
-// Returns a Query
-function create(name, playlist_id)
+// Returns a Promise
+async function create(name, playlist_id)
 {
     // Create all the songs on the playlist
-    var songs = songsdb.createFromPlaylistId(this.playlist_id);
+    var songs = await songsdb.createFromPlaylistId(playlist_id);
 
     // Get the song object ids
     var ids = [];
@@ -47,7 +47,7 @@ function create(name, playlist_id)
         throw 'Unable to load songs from YouTube playlist';
     }
 
-    return gameModel.create(save);
+    return await game.save();
 }
 
 // Get the game with the given name

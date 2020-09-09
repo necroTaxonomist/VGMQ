@@ -148,8 +148,13 @@ async function createFromPlaylistId(playlistId)
         // Get the song
         var song = songs[i];
 
-        // Check if already present
-        if(present_songs.some(p => p.video_id == song.video_id))
+        if (songs.findIndex(s => s.video_id == song.video_id) < i)  // Check for duplicate
+        {
+            // Remove from songs
+            songs.splice(i, 1);
+            i -= 1;
+        }
+        else if(present_songs.some(s => s.video_id == song.video_id))  // Check if already present
         {
             // Update
             await songModel.updateOne({video_id : song.video_id}, song);
