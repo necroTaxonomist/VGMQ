@@ -117,6 +117,12 @@ async function getPlaylistWithSongs(id)
         // Query YouTube for videos
         var res = await youtube.videos.list(videos_query);
 
+        // If nothing returned, get out of there
+        if (res.data.items.length == 0)
+        {
+            break;
+        }
+
         // Remove the returned ids and update the query
         video_ids = video_ids.slice(res.data.items.length);
         videos_query.id = video_ids.slice(0, 50).join(',');
@@ -277,6 +283,12 @@ async function queryVideos(ids, part = 'snippet')
     {
         // Query YouTube for videos
         var response = await youtube.videos.list(query);
+
+        // If nothing returned, get out of there
+        if (response.data.items.length == 0)
+        {
+            break;
+        }
 
         // Remove the returned ids and update the query
         videoIds = videoIds.slice(response.data.items.length);
