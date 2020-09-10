@@ -25,13 +25,22 @@ block content
     input(name="song_selection" id="songsel_random" type="radio" value="random" checked disabled)
     | Random  
     input(name="song_selection" id="songsel_weight_by_views" type="radio" value="weight_by_views" disabled)
-    | Weight by Views
+    | Weight by Views  
     input(name="song_selection" id="songsel_weight_by_likes" type="radio" value="weight_by_likes" disabled)
     | Weight by Likes
     br
 
     | Guess Time (Seconds): 
     input(name="guess_time" id="guess_time" type="number" min="1" max="100" disabled)
+    br
+
+    | Difficulty
+    input(name="allow_easy" id="allow_easy" type="checkbox" checked disabled)
+    | Easy  
+    input(name="allow_medium" id="allow_medium" type="checkbox" checked disabled)
+    | Medium  
+    input(name="allow_hard" id="allow_hard" type="checkbox" checked disabled)
+    | Hard
     br
 
     input(id="reset_settings" type="button" value="Reset" disabled)

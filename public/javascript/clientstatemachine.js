@@ -65,6 +65,9 @@ function showGameSettings()
     document.getElementById("gamesel_" + lobby.settings.game_selection).checked = true;
     document.getElementById("songsel_" + lobby.settings.song_selection).checked = true;
     document.getElementById("guess_time").value = lobby.settings.guess_time;
+    document.getElementById("allow_easy").checked = lobby.settings.allow_easy;
+    document.getElementById("allow_medium").checked = lobby.settings.allow_medium;
+    document.getElementById("allow_hard").checked = lobby.settings.allow_hard;
 
     // Get the settings form
     const settings = document.getElementById("settings");
@@ -169,8 +172,8 @@ function showVideo()
     // Set the game name
     document.getElementById("videoname").innerHTML = video.game_name;
 
-    // Set the song name
-    document.getElementById("songname").innerHTML = video.song_name;
+    // Set the video title
+    document.getElementById("songname").innerHTML = video.title;
 
     // Enable the report button
     document.getElementById("reportbutton").disabled = false;
@@ -252,7 +255,7 @@ function showReadyStart()
     );
 
     // Check if everyone ready
-    var anyoneNotReady = lobby.players.some(player => !player.ready);
+    var anyoneNotReady = lobby.players.some(player => !player.ready && !player.spectator);
 
     // Disable the start button if not host
     document.getElementById("startbutton").disabled = !isHost || anyoneNotReady;
@@ -352,6 +355,9 @@ function showWinLosePlayers()
     {
         var li = document.createElement("li");
 
+        if (player.winner)
+            li.innerText += '🏆';
+
         if (player.correct)
             li.innerText += '😄';
         else
@@ -362,7 +368,16 @@ function showWinLosePlayers()
 
         li.innerText += ' ' + player.username;
         li.innerText += ' (' + player.points + ' points)';
-        li.innerText += ' [' + player.answer + ']';
+
+        if (player.answer.length != 0)
+            li.innerText += ' [' + player.answer + ']';
+        else
+        li.innerText += ' [...]';
+
+        if (player.exp)
+        {
+            li.innerHTML += '<span style="color:green;"> +' + player.exp + '</span>';
+        }
 
         ul.appendChild(li);
     }

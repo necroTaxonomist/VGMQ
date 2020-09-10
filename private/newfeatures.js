@@ -3,6 +3,18 @@
 const features =
 [
     {
+        date: new Date('September 9, 2020 22:00:00'),
+        value: 'Added difficulty settings. Note: singleplayers game do not count towards difficulty.'
+    },
+    {
+        date: new Date('September 9, 2020 22:00:00'),
+        value: 'Players whose lists contain the show song are now displayed on round end.'
+    },
+    {
+        date: new Date('September 9, 2020 22:00:00'),
+        value: 'Added experience points and overall win count.'
+    },
+    {
         date: new Date('September 8, 2020 22:00:00'),
         value: 'YouTube metadata for videos is now kept in a local database. Game start times should decrease as the database builds.'
     },

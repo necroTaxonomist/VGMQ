@@ -9,6 +9,22 @@ block content
 
   h2 Game: #{game.game_name}
 
+  p
+    | Correct guesses: #{game.correct_guesses}
+    br
+    | Total guesses: #{game.total_guesses}
+    br
+    | Correct percentage: #{game.correct_fraction * 100}  
+    if game.easy
+      span(style={'background-color': 'green'})
+        | Easy
+    if game.medium
+      span(style={'background-color': 'yellow'})
+        | Medium
+    if game.hard
+      span(style={'background-color': 'red'})
+        | Hard
+
   if currentuser.games.includes(game._id)
     form(action="/users/" + currentuser.username + "/remove" method="POST")
       input(name="game_name" type="hidden" value=game.game_name)

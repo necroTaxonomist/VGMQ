@@ -147,6 +147,41 @@ async function updateLastLogin(username)
     return userModel.findOneAndUpdate(query, update).exec();
 }
 
+// Returns if a given user has a game on their list
+// Returns a Promise
+async function hasGame(username, game_name)
+{
+    // Get the game ID
+    var game = await gamesdb.get(game_name);
+    var game_id = game.id;
+
+    // Check if the user has the game
+    var query =
+    {
+        username: username,
+        games: {  $elemMatch: { $eq: game_id }  }
+    };
+    return await userModel.exists(query);
+}
+
+// Adds experience points to a user
+// Returns a Query
+function addExp(username, exp)
+{
+    var query = { username: username };
+    var update = {  $inc: { exp: exp }  };
+    return userModel.findOneAndUpdate(query, update);
+}
+
+// Adds wins to a user
+// Returns a Query
+function addWins(username, wins)
+{
+    var query = { username: username };
+    var update = {  $inc: { wins: wins }  };
+    return userModel.findOneAndUpdate(query, update);
+}
+
 module.exports =
 {
     create,
@@ -157,5 +192,8 @@ module.exports =
     removeGameFromUser,
     removeGameFromAllUsers,
     getGamesFromUser,
-    updateLastLogin
+    updateLastLogin,
+    hasGame,
+    addExp,
+    addWins
 }

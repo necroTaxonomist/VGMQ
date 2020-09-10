@@ -24,6 +24,17 @@ function QueueingState()
         function()  // onExit
         {
             console.log("QueueingState::onExit");
+
+            // Reset everyone's ready and points
+            for (player of this.parent.players)
+            {
+                player.ready = false;
+                player.points = 0;
+                player.winner = false;
+            }
+
+            // Update clients
+            this.parent.sendLobbyInfo();
         }
     );
     this.addHandler('ready', function(event)  // A player toggled ready
@@ -59,17 +70,21 @@ function QueueingState()
             // Don't start unless everyone is ready
             if (!this.parent.players.some(player => !player.ready && !player.spectator))
             {
-                // Decide all the videos to use
-                await this.parent.generateVideos();
-
-                // Go to the first video
-                await this.parent.goto('guessing');
-
-                // Reset everyone's ready and points
-                for (player of this.parent.players)
+                
+                try
                 {
-                    player.ready = false;
-                    player.points = 0;
+                    // Decide all the videos to use
+                    await this.parent.generateVideos();
+
+                    // Go to the first video
+                    await this.parent.goto('guessing');
+                }
+                catch (err)
+                {
+                    console.log('Failed to start game: ' + err);
+
+                    // Re-enter the state
+                    await this.parent.goto('queueing');
                 }
             }
 
@@ -100,6 +115,9 @@ function GuessingState()
             // Update clients
             this.parent.sendLobbyInfo();
 
+            // Set the round start time
+            this.roundstart = Date.now();
+
             // After time runs out, send a timeout event
             var time_left = this.parent.settings.guess_time * 1000;
             setTimeout(async () =>
@@ -107,21 +125,107 @@ function GuessingState()
                     await this.parent.handle('timeout');
                 }, time_left);
         },
-        function()  // onExit
+        async function()  // onExit
         {
             console.log("GuessingState::onExit");
 
             // Get the current video
             var cur_vid = this.parent.videos[this.parent.round - 1];
 
-            // Update correct for players and assign points
+            // Operations on players
+            var numCorrect = 0;
+            var numIncorrect = 0;
             for (player of this.parent.players)
             {
+                // Check if the player is correct or incorrect
                 player.correct = player.answered && player.answer == cur_vid.game_name;
                 if (player.correct)
                 {
                     player.points += 1;
-                    // TODO: Experience points
+                    numCorrect += 1;
+                    
+                    // Calculate EXP
+
+                    // Get the time since the round start of this answer
+                    var timeTaken = player.answerTime - this.roundstart;
+
+                    // Calculate the experience multiplier
+                    var multiplier = Math.min(Math.sqrt(20000 / timeTaken), 4);
+
+                    // Calculate the EXP gain
+                    var expGain = Math.floor(multiplier * 50);
+
+                    // Set the visible EXP gain
+                    player.exp = expGain;
+                }
+                else
+                {
+                    numIncorrect += 1;
+                    player.exp = 0;
+                }
+
+                // Check if this player should be blamed
+                player.blame = await usersdb.hasGame(player.username, cur_vid.game_name);
+            }
+
+            // Update the game's guess statistics, but only in multiplayer games
+            if (this.parent.players.length > 1)
+            {
+                try
+                {
+                    await gamesdb.addGuesses(cur_vid.game_name, numCorrect, numIncorrect);
+                }
+                catch (err)
+                {
+                    console.log('Failed to update guess statistics: ' + err);
+                }
+            }
+
+            // Sort players by points
+            this.parent.players.sort(function(a, b)
+                {
+                    return a.points - b.points;
+                }
+            );
+
+            // If the game is finished
+            if (this.parent.round == this.parent.videos.length)
+            {
+                // Assign player ranks and experience points
+                var prevPoints = 0;
+                var rank = 1;
+                for (player of this.parent.players)
+                {
+                    // This allows ties
+                    if (player.points < prevPoints)
+                        rank += 1;
+                    
+                    // Set the visible rank and win status
+                    player.rank = rank;
+                    player.winner = (rank == 1);
+
+                    // Calculate EXP
+                    var betterThan = this.parent.players.length - player.rank;
+                    var multiplier = (betterThan/4 + .5);
+                    var expGain = multiplier * (player.points * 100);
+
+                    // Set the visible EXP gain
+                    player.exp += expGain;
+
+                    // Add a win if this is a multiplayer game
+                    if (player.winner && this.parent.players.length > 1)
+                    {
+                        await usersdb.addWins(player.username, 1);
+                    }
+                }
+            }
+
+            // Add experience points
+            for (player of this.parent.players)
+            {
+                if (player.exp != 0)
+                {
+                    await usersdb.addExp(player.username, player.exp);
                 }
             }
 
@@ -144,6 +248,7 @@ function GuessingState()
             {
                 found.answer = event.answer;
                 found.answered = true;
+                found.answerTime = Date.now();
             }
 
             // Update clients
@@ -232,12 +337,16 @@ function HostStateMachine(name, password = '')
         num_games: 20,
         game_selection: 'random',
         song_selection: 'random',
-        guess_time: 20
+        guess_time: 20,
+        allow_easy: 'on',
+        allow_medium: 'on',
+        allow_hard: 'on'
     };
 
     // Game information
     this.round = 0;
     this.videos = [];
+    this.roundstart = Date.now();
 
     // Local RNG
     this.random = require('seedrandom')(new Date().toString());
@@ -313,7 +422,7 @@ function HostStateMachine(name, password = '')
         socket.on('report', async (video) =>
             {
                 console.log('Received report for game_name=' + video.game_name + ', video_id=' + video.video_id);
-                await songsdb.blockVideoIds([video.video_id]);
+                await songsdb.setBlocked(video._id, true);
             }
         );
 
@@ -384,6 +493,17 @@ function HostStateMachine(name, password = '')
     // Generate the list of videos to use for this game
     this.generateVideos = async function()
     {
+        function correctDifficulty(game, settings)
+        {
+            if (game.easy && !(settings.allow_easy === 'on'))
+                return false;
+            if (game.medium && !(settings.allow_medium === 'on'))
+                return false;
+            if (game.hard && !(settings.allow_hard === 'on'))
+                return false;
+            return true;
+        }
+
         var games = [];
 
         if (this.settings.game_selection == 'only_played')  // Only played
@@ -397,6 +517,9 @@ function HostStateMachine(name, password = '')
             {
                 // Get all games for the user
                 var user_games = await usersdb.getGamesFromUser(player.username);
+
+                // Filter out songs of the wrong difficulty
+                user_games = user_games.filter(game => correctDifficulty(game, this.settings));
 
                 for (num = 0; num < sample_from_each && user_games.length != 0; num += 1)
                 {
@@ -430,6 +553,9 @@ function HostStateMachine(name, password = '')
         {
             var all_games = await gamesdb.all();
 
+            // Filter out songs of the wrong difficulty
+            all_games = all_games.filter(game => correctDifficulty(game, this.settings));
+
             while (games.length < this.settings.num_games && all_games.length != 0)
             {
                 // Pull a random game
@@ -441,6 +567,12 @@ function HostStateMachine(name, password = '')
 
         // Clear the existing videos list
         this.videos = [];
+
+        // No games found
+        if (games.length == 0)
+        {
+            throw 'No games were sampled';
+        }
 
         // For each of the sampled games
         var round = 1;
@@ -518,8 +650,9 @@ function HostStateMachine(name, password = '')
             {
                 round: round,
                 game_name: game.game_name,
+                id: chosen_song._id,
                 video_id: chosen_song.video_id,
-                song_name: chosen_song.title
+                title: chosen_song.title
             };
 
             // Add to list
@@ -528,6 +661,9 @@ function HostStateMachine(name, password = '')
             // Increment round
             round += 1;
         }
+
+        // Log videos to the console
+        console.log(this.videos);
     };
 
     // Increments the round number and sends the video to all players

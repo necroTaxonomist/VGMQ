@@ -11,10 +11,38 @@ var gameSchema = new mongoose.Schema(
         game_name: { type: String, index: true, unique: true, required: true },
         playlist_id: { type: String, required: true },
         songs: { type: [mongoose.Schema.Types.ObjectId], default: undefined },
+        total_guesses: {type: Number, default: 0},
+        correct_guesses: { type: Number, default: 0},
         blocked_ids: []  // Legacy
     },
     { collection: 'games' }
 );
+gameSchema.virtual('incorrect_guesses').get(function()
+    {
+        return this.total_guesses - this.correct_guesses;
+    }
+);
+gameSchema.virtual('correct_fraction').get(function()
+    {
+        return (this.total_guesses == 0) ? 1 : (this.correct_guesses / this.total_guesses);
+    }
+);
+gameSchema.virtual('hard').get(function()
+    {
+        return this.correct_fraction <= .2;
+    }
+);
+gameSchema.virtual('medium').get(function()
+    {
+        return this.correct_fraction > .2 && this.correct_fraction < .6;
+    }
+);
+gameSchema.virtual('easy').get(function()
+    {
+        return this.correct_fraction >= .6;
+    }
+);
+
 
 // Game Model
 var gameModel = mongoose.model('game', gameSchema);
@@ -203,6 +231,15 @@ async function updateSongs(game_name)
     return gameModel.findOneAndUpdate(query, update, options).exec();
 }
 
+// Adds some number of correct and incorrect guesses to a song
+// Returns a Query
+function addGuesses(game_name, correct, incorrect)
+{
+    var query = { game_name: game_name };
+    var update = {  $inc: { total_guesses: correct + incorrect, correct_guesses: correct }  };
+    return gameModel.findOneAndUpdate(query, update);
+}
+
 module.exports =
 {
     create,
@@ -215,5 +252,6 @@ module.exports =
     idsToGames,
     addBlockedId,
     removeBlockedId,
-    updateSongs
+    updateSongs,
+    addGuesses
 }
