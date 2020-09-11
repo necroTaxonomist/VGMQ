@@ -10,6 +10,76 @@ block content
   h2 Game: #{game.game_name}
 
   p
+    form(action="/games/edit" method="POST")
+      | Name: 
+      span(id="game_name_display")
+        | #{game.game_name} 
+        input(id="edit_name" type="button" value="✏️")
+      span(id="game_name_edit" hidden)
+        input(id="input_name" name="game_name" type="text" value=game.game_name required)
+        input(type="submit" value="✔️")
+        input(id="cancel_name" type="button" value="❌")
+      input(name="old_game_name" type="hidden" value=game.game_name)
+      input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
+    form(action="/games/edit" method="POST")
+      | Playlist URL: 
+      span(id="playlist_url_display")
+        a(href="https://www.youtube.com/playlist?list=" + game.playlist_id) https://www.youtube.com/playlist?list=#{game.playlist_id}
+        |  
+        input(id="edit_url" type="button" value="✏️")
+      span(id="playlist_url_edit" hidden)
+        input(id="input_url" name="playlist_url" type="text" value="https://www.youtube.com/playlist?list=" + game.playlist_id required)
+        input(type="submit" value="✔️")
+        input(id="cancel_url" type="button" value="❌")
+      input(name="old_game_name" type="hidden" value=game.game_name)
+      input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
+
+  script.
+    var game_name_display = document.getElementById("game_name_display");
+    var edit_name = document.getElementById("edit_name");
+
+    var game_name_edit = document.getElementById("game_name_edit");
+    var input_name = document.getElementById("input_name");
+    var cancel_name = document.getElementById("cancel_name");
+
+    edit_name.onclick = function()
+    {
+      input_name.value = "#{game.game_name}";
+      game_name_display.hidden = true;
+      game_name_edit.hidden = false;
+
+      playlist_url_display.hidden = false;
+      playlist_url_edit.hidden = true;
+    }
+    cancel_name.onclick = function()
+    {
+      game_name_display.hidden = false;
+      game_name_edit.hidden = true;
+    }
+
+    var playlist_url_display = document.getElementById("playlist_url_display");
+    var edit_url = document.getElementById("edit_url");
+
+    var playlist_url_edit = document.getElementById("playlist_url_edit");
+    var input_url = document.getElementById("input_url");
+    var cancel_url = document.getElementById("cancel_url");
+
+    edit_url.onclick = function()
+    {
+      input_url.value = "https://www.youtube.com/playlist?list=#{game.playlist_id}"
+      playlist_url_display.hidden = true;
+      playlist_url_edit.hidden = false;
+
+      game_name_display.hidden = false;
+      game_name_edit.hidden = true;
+    }
+    cancel_url.onclick = function()
+    {
+      playlist_url_display.hidden = false;
+      playlist_url_edit.hidden = true;
+    }
+    
+  p
     | Correct guesses: #{game.correct_guesses}
     br
     | Total guesses: #{game.total_guesses}
@@ -37,10 +107,6 @@ block content
       button(type="submit") Add to my library
 
   h3 Songs (#{songs.length})
-
-  p
-    | Playlist URL: 
-    a(href="https://www.youtube.com/playlist?list=" + game.playlist_id) https://www.youtube.com/playlist?list=#{game.playlist_id}
 
   ol
     each song in songs

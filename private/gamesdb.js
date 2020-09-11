@@ -240,6 +240,34 @@ function addGuesses(game_name, correct, incorrect)
     return gameModel.findOneAndUpdate(query, update);
 }
 
+// Edits the name of a game
+// Returns a Query
+function editName(old_game_name, new_game_name)
+{
+    var query = { game_name: old_game_name };
+    var update = {  game_name: new_game_name  };
+    return gameModel.findOneAndUpdate(query, update);
+}
+
+// Edits the playlist ID of a game
+// Returns a Promise
+async function editPlaylist(game_name, playlist_id)
+{
+    // Create all the songs on the playlist
+    var songs = await songsdb.createFromPlaylistId(playlist_id);
+
+    // Get the song object ids
+    var song_ids = [];
+    for (song of songs)
+    {
+        song_ids.push(song._id);
+    }
+
+    var query = { game_name: game_name };
+    var update = {  $set: { playlist_id: playlist_id, songs: song_ids }  };
+    return gameModel.findOneAndUpdate(query, update).exec();
+}
+
 module.exports =
 {
     create,
@@ -253,5 +281,7 @@ module.exports =
     addBlockedId,
     removeBlockedId,
     updateSongs,
-    addGuesses
+    addGuesses,
+    editName,
+    editPlaylist
 }

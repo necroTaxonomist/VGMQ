@@ -246,4 +246,43 @@ async function unblockSong(req, res, next)
 }
 router.post('/unblock', unblockSong);
 
+/* POST to edit a game */
+async function editGame(req, res, next)
+{
+    try
+    {
+        await usersdb.auth(req.session.username, req.session.password);
+
+        // Get values from the post
+        var old_game_name = req.body.old_game_name;
+        var game_name = req.body.game_name;
+        var playlist_url = req.body.playlist_url;
+
+        var new_game_name;
+        if (game_name != undefined)
+        {
+            await gamesdb.editName(old_game_name, game_name);
+            new_game_name = game_name;
+        }
+        else
+        {
+            new_game_name = old_game_name;
+        }
+
+        if (playlist_url != undefined)
+        {
+            var playlist_id = yt.playlistUrlToId(playlist_url);
+            await gamesdb.editPlaylist(new_game_name, playlist_id);
+        }
+
+        res.redirect('/games/' + encodeURIComponent(new_game_name));
+    }
+    catch (err)
+    {
+        var string = encodeURIComponent(err);
+        res.redirect(req.body.source_url + '?err=' + err);
+    }
+}
+router.post('/edit', editGame);
+
 module.exports = router;

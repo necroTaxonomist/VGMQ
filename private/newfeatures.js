@@ -3,8 +3,12 @@
 const features =
 [
     {
+        date: new Date('September 11, 2020 15:00:00'),
+        value: 'Added game name and playlist URL edit buttons to individual game pages.'
+    },
+    {
         date: new Date('September 9, 2020 22:00:00'),
-        value: 'Added difficulty settings. Note: singleplayers game do not count towards difficulty.'
+        value: 'Added difficulty settings. Note: singleplayer games do not count towards difficulty.'
     },
     {
         date: new Date('September 9, 2020 22:00:00'),
