@@ -14,7 +14,10 @@ block content
     li
       a(href="/users") View all users
     li
-      | Gacha (TODO)
+      if username == "Admin"
+        a(href="/gacha") 🎲Gacha🎲
+      else
+        | Gacha (TODO)
     li
       a(href="/logout") Log out
   

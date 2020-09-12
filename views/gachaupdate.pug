@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  a(href="/main") Back to main page
+  br
+
+  h2 Update gacha items database
+
+  form(action="/gacha/update" method="POST")
+    input(type="submit" value="Update")

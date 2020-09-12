@@ -14,7 +14,8 @@ var userSchema = new mongoose.Schema(
         wins: { type: Number, default: 0 },
         exp: { type: Number, default: 0 },
         lastlogin: { type: Date, default: new Date()},
-        games: { type: [mongoose.Schema.Types.ObjectId], default: [] }
+        games: { type: [mongoose.Schema.Types.ObjectId], default: [] },
+        items: { type: [mongoose.Mixed], default: [] },
     },
     { collection: 'users' }
 );
@@ -196,4 +197,4 @@ module.exports =
     hasGame,
     addExp,
     addWins
-}
+};

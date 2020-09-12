@@ -1,0 +1,65 @@
+extends layout
+
+block content
+  a(href="/main") Back to main page
+  br
+
+  h2 Gacha
+
+  h3 Gamble your life away
+
+  p
+    | You have: 
+    span(style={color: 'green'})
+      | #{exp} EXP
+  p
+    form(action="/gacha" method="GET")
+      | Rolls x
+      input(name="rolls" id="num_rolls" type="number" min="1" max=maxrolls value=1)
+      | = 
+      span(id="cost")
+        | ?
+      |  EXP
+
+      ul
+        li #{unitcost} EXP base price
+        li #{unitdiscount * 100}% discount per extra roll
+        li Up to #{maxrolls} rolls at a time
+
+      input(id="submit_button" type="submit" value="🎲Roll the gacha🎲" disabled)
+
+  script.
+    var numRollsInput = document.getElementById("num_rolls");
+    var costDisplay = document.getElementById("cost");
+    var submitButton = document.getElementById("submit_button");
+
+    function updateCost()
+    {
+        console.log('update');
+
+        var baseCost = numRollsInput.value * #{unitcost};
+        var discount = Math.pow(1 - #{unitdiscount}, numRollsInput.value - 1);
+        var cost = Math.floor(baseCost * discount);
+
+        costDisplay.innerText = cost;
+
+        submitButton.disabled = (cost > #{exp}) || (numRollsInput.value > #{maxrolls});
+    }
+
+    numRollsInput.oninput = updateCost; 
+    updateCost();
+
+  if spoils != undefined && spoils.length != 0
+    h3 You rolled:
+
+    ul
+      each item in spoils
+        li
+          if item.kind == "color"
+            | #{item.stars}:
+            span(style={color: '#{item.data.color}'})
+              | #{item.item_name}
+          if item.kind == "emoji"
+            | #{item.stars}: #{item.item_name} #{item.data.emoji}
+          if item.kind == "dud"
+            | ☹ DUD ☹

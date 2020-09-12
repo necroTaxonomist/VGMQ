@@ -11,6 +11,7 @@ var signupRouter = require('./routes/signup');
 var mainRouter = require('./routes/main');
 var gamesRouter = require('./routes/games');
 var lobbyRouter = require('./routes/lobby');
+var gachaRouter = require('./routes/gacha');
 
 var app = express();
 
@@ -35,6 +36,7 @@ app.use('/signup', signupRouter);
 app.use('/main', mainRouter);
 app.use('/games', gamesRouter);
 app.use('/lobby', lobbyRouter);
+app.use('/gacha', gachaRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

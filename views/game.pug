@@ -3,9 +3,9 @@ extends layout
 block content
   a(href="/main") Back to main page
   br
-  a(href="/games") Back to all games
-  br
   a(href="/users/" + currentuser.username) Back to my games library
+  br
+  a(href="/games") Back to all games
 
   h2 Game: #{game.game_name}
 
