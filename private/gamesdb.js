@@ -152,8 +152,84 @@ async function idsToNames(ids)
 async function searchNames(search, num)
 {
     // Nonword characters are interchangeable
-    const sanitized = search.replace(/\W+/g, '\\W*');
+    var sanitized = search.replace(/\W+/g, '\\W*');
 
+    function intToRoman(value)
+    {
+        var s = '';
+        while (value >= 1000)  // Convert thousands into Ms
+        {
+            value -= 1000;
+            s += 'M';
+        }
+        if (value >= 900)  // Convert 900 into CM
+        {
+            value -= 900;
+            s += 'CM';
+        }
+        if (value >= 500)  // Convert 500 into D
+        {
+            value -= 500;
+            s += 'D';
+        }
+        if (value >= 400)  // Convert 400 into CD
+        {
+            value -= 400;
+            s += 'CD';
+        }
+        while (value >= 100)  // Convert hundreds into Cs
+        {
+            value -= 100;
+            s += 'I';
+        }
+        if (value >= 90)  // Convert 90 into XC
+        {
+            value -= 90;
+            s += 'XC';
+        }
+        if (value >= 50)  // Convert 50 into L
+        {
+            value -= 50;
+            s += 'L';
+        }
+        if (value >= 40)  // Convert 40 into XL
+        {
+            value -= 40;
+            s += 'XL';
+        }
+        while (value >= 10)  // Convert tens into Xs
+        {
+            value -= 10;
+            s += 'X'
+        }
+        if (value >= 9)  // Convert 9 into IX
+        {
+            value -= 9;
+            s += 'IX';
+        }
+        if (value >= 5)  // Convert 5 into V
+        {
+            value -= 5;
+            s += 'V';
+        }
+        if (value >= 4)  // Convert 4 into IV
+        {
+            value -= 4;
+            s += 'IV';
+        }
+        while (value >= 1)  // Convert ones into Is
+        {
+            value -= 1;
+            s += 'I';
+        }
+
+        return s;
+    }
+
+    // Numbers can also be read as Roman numerals
+    sanitized = sanitized.replace( /\d+/g, (x) => '(' + x + '|' + intToRoman(parseInt(x)) + ')');
+
+    // Database query
     const re = new RegExp(sanitized, 'i');
     const query = await gameModel.find({game_name: re});
     var names = [];

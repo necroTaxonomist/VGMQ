@@ -138,7 +138,7 @@ function GuessingState()
             for (player of this.parent.players)
             {
                 // Check if the player is correct or incorrect
-                player.correct = player.answered && player.answer == cur_vid.game_name;
+                player.correct = player.answered && player.answer.toLowerCase() == cur_vid.game_name.toLowerCase();
                 if (player.correct)
                 {
                     player.points += 1;

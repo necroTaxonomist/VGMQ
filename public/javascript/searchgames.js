@@ -157,11 +157,27 @@ function autocomplete(inp, extra_callback = undefined)
     );
 }
 
+// Stole this from StackOverflow, yay
+function sleepAsync(millis)
+{
+    return new Promise((resolve) =>
+        {
+            setTimeout(resolve, millis);
+        }
+    );
+}
+
 // The time of the last query
 var last_query = undefined;
 
-// The minimum time that needs to pass before database queries (in seconds)
-const min_cooldown = .25;
+// The minimum time that needs to pass before database queries (in milliseconds)
+const minCooldown = 250;
+
+// Promise for waiting until cooldown
+var cooldownPromise = null;
+
+// Value to search for
+var searchValue = '';
 
 // Make a database query
 async function getSimilar(input)
@@ -169,16 +185,27 @@ async function getSimilar(input)
     // Get the current time
     var now = new Date().getTime();
 
+    // Set the search value
+    searchValue = input;
+
     if (last_query != undefined)
     {
         // Find the time since the last query
         var distance = now - last_query;
-        var cooldown = (distance % (1000 * 60)) / 1000;
+        var cooldown = distance % (1000 * 60);
 
-        // Throw an error if too soon
-        if (cooldown < min_cooldown)
+        /// Too soon to query again
+        if (cooldown < minCooldown)
         {
-            throw "Can't query the database this fast."
+            // Wait until cooldown completes
+            await sleepAsync(minCooldown - cooldown);
+
+            // Check if this is not the most recent query
+            if (searchValue != input)
+            {
+                // Throw out this query
+                throw "Outdated query";
+            }
         }
     }
 
