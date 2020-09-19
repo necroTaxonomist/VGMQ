@@ -47,7 +47,7 @@ async function userPage(req, res, next)
         {
             user: user,
             currentusername: req.session.username,
-            gamenames: await gamesdb.idsToNames(user.games)
+            games: await gamesdb.idsToGames(user.games)
         };
 
         if (req.query.err)

@@ -21,6 +21,7 @@ block content
         input(id="cancel_name" type="button" value="❌")
       input(name="old_game_name" type="hidden" value=game.game_name)
       input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
+
     form(action="/games/edit" method="POST")
       | Playlist URL: 
       span(id="playlist_url_display")
@@ -33,6 +34,36 @@ block content
         input(id="cancel_url" type="button" value="❌")
       input(name="old_game_name" type="hidden" value=game.game_name)
       input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
+  
+  p
+    form(action="/games/rate" method="POST")
+      if game.average_rating != 0
+        | Overall user rating: 
+        strong #{game.average_rating} 
+        | (#{game.num_ratings} users)
+      else
+        | No user ratings
+      br
+      | My rating: 
+      span(id="rating_display")
+        if game.ratings[currentuser.username]
+          strong #{game.ratings[currentuser.username]} 
+        else
+          | Unrated 
+        input(id="edit_rating" type="button" value="✏️" hidden=!currentuser.games.includes(game._id))
+      span(id="rating_edit" hidden)
+        input(id="input_rating" name="rating" type="number" min="1" max="10")
+        input(type="submit" value="✔️")
+        input(id="cancel_rating" type="button" value="❌")
+      input(name="game_name" type="hidden" value=game.game_name)
+      input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
+
+  if game.ratings[currentuser.username]
+    script.
+      const userRating = #{game.ratings[currentuser.username]};
+  else
+    script.
+      const userRating = undefined;
 
   script.
     var game_name_display = document.getElementById("game_name_display");
@@ -50,6 +81,9 @@ block content
 
       playlist_url_display.hidden = false;
       playlist_url_edit.hidden = true;
+
+      rating_display.hidden = false;
+      rating_edit.hidden = true;
     }
     cancel_name.onclick = function()
     {
@@ -72,11 +106,40 @@ block content
 
       game_name_display.hidden = false;
       game_name_edit.hidden = true;
+
+      rating_display.hidden = false;
+      rating_edit.hidden = true;
     }
     cancel_url.onclick = function()
     {
       playlist_url_display.hidden = false;
       playlist_url_edit.hidden = true;
+    }
+
+    var rating_display = document.getElementById("rating_display");
+    var edit_rating = document.getElementById("edit_rating");
+
+    var rating_edit = document.getElementById("rating_edit");
+    var input_rating = document.getElementById("input_rating");
+    var cancel_rating = document.getElementById("cancel_rating");
+
+    edit_rating.onclick = function()
+    {
+      input_rating.value = userRating;
+
+      rating_display.hidden = true;
+      rating_edit.hidden = false;
+
+      game_name_display.hidden = false;
+      game_name_edit.hidden = true;
+
+      playlist_url_display.hidden = false;
+      playlist_url_edit.hidden = true;
+    }
+    cancel_rating.onclick = function()
+    {
+      rating_display.hidden = false;
+      rating_edit.hidden = true;
     }
     
   p

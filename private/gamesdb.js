@@ -11,8 +11,9 @@ var gameSchema = new mongoose.Schema(
         game_name: { type: String, index: true, unique: true, required: true },
         playlist_id: { type: String, required: true },
         songs: { type: [mongoose.Schema.Types.ObjectId], default: undefined },
-        total_guesses: {type: Number, default: 0},
-        correct_guesses: { type: Number, default: 0},
+        total_guesses: { type: Number, default: 0 },
+        correct_guesses: { type: Number, default: 0 },
+        ratings: { type: mongoose.Schema.Types.Mixed, default: {} },
         blocked_ids: []  // Legacy
     },
     { collection: 'games' }
@@ -40,6 +41,31 @@ gameSchema.virtual('medium').get(function()
 gameSchema.virtual('easy').get(function()
     {
         return this.correct_fraction >= .6;
+    }
+);
+gameSchema.virtual('num_ratings').get(function()
+    {
+        return Object.values(this.ratings).length;
+    }
+);
+gameSchema.virtual('average_rating').get(function()
+    {
+        var sum = 0;
+        var total = 0;
+
+        for (const rating of Object.values(this.ratings))
+        {
+            if (rating)  // Valid rating
+            {
+                if (typeof rating == 'number')
+                    sum += rating;
+                else
+                    sum += parseInt(rating);
+                total += 1;
+            }
+        }
+
+        return (total != 0) ? (sum / total) : (0);
     }
 );
 
@@ -344,6 +370,30 @@ async function editPlaylist(game_name, playlist_id)
     return gameModel.findOneAndUpdate(query, update).exec();
 }
 
+// Rates a game according to a user
+// Returns a Query
+function rate(game_name, username, rating)
+{
+    // Query
+    var query = { game_name: game_name };
+
+    // Update
+    var update;
+    if (rating)  // Valid rating
+    {
+        update = {};
+        update['ratings.' + username] = rating;
+    }
+    else  // Unrate
+    {
+        var inner = {};
+        inner['ratings.' + username] = 1;
+        update = {$unset: inner};
+    }
+
+    return gameModel.findOneAndUpdate(query, update);
+}
+
 module.exports =
 {
     create,
@@ -359,5 +409,6 @@ module.exports =
     updateSongs,
     addGuesses,
     editName,
-    editPlaylist
+    editPlaylist,
+    rate
 };

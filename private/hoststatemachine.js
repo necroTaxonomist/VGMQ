@@ -132,6 +132,10 @@ function GuessingState()
             // Get the current video
             var cur_vid = this.parent.videos[this.parent.round - 1];
 
+            // Get the current game
+            const cur_game = await gamesdb.get(cur_vid.game_name);
+            console.log(cur_game);
+
             // Operations on players
             var numCorrect = 0;
             var numIncorrect = 0;
@@ -166,6 +170,13 @@ function GuessingState()
 
                 // Check if this player should be blamed
                 player.blame = await usersdb.hasGame(player.username, cur_vid.game_name);
+
+                // Update the player rating (shown if blamed)
+                const rating = cur_game.ratings[player.username];
+                if (rating)
+                    player.rating = rating;
+                else
+                    player.rating = undefined;
             }
 
             // Update the game's guess statistics, but only in multiplayer games
@@ -338,9 +349,14 @@ function HostStateMachine(name, password = '')
         game_selection: 'random',
         song_selection: 'random',
         guess_time: 20,
+        restrict_difficulty: 'off',
         allow_easy: 'on',
         allow_medium: 'on',
-        allow_hard: 'on'
+        allow_hard: 'on',
+        restrict_ratings: 'off',
+        min_rating: 1,
+        max_rating: 10,
+        allow_unrated: 'on'
     };
 
     // Game information
@@ -495,6 +511,8 @@ function HostStateMachine(name, password = '')
     {
         function correctDifficulty(game, settings)
         {
+            if (!(settings.restrict_difficulty == 'on'))
+                return true;
             if (game.easy && !(settings.allow_easy === 'on'))
                 return false;
             if (game.medium && !(settings.allow_medium === 'on'))
@@ -502,6 +520,28 @@ function HostStateMachine(name, password = '')
             if (game.hard && !(settings.allow_hard === 'on'))
                 return false;
             return true;
+        }
+        
+        function correctRating(game, settings, username = undefined)
+        {
+            if (!(settings.restrict_ratings == 'on'))
+                return true;
+
+            // Get the rating
+            var rating;
+            if (username == undefined)  // Average rating
+                rating = game.average_rating;
+            else
+                rating = game.ratings[username];
+
+            if (!rating)  // Not rated
+            {
+                return settings.allow_unrated == 'on';
+            }
+
+            // True if in range
+            return (rating >= settings.min_rating) &&
+                   (rating <= settings.max_rating);
         }
 
         var games = [];
@@ -520,6 +560,9 @@ function HostStateMachine(name, password = '')
 
                 // Filter out songs of the wrong difficulty
                 user_games = user_games.filter(game => correctDifficulty(game, this.settings));
+
+                // Filter out songs of the wrong user rating
+                user_games = user_games.filter(game => correctRating(game, this.settings, player.username));
 
                 for (num = 0; num < sample_from_each && user_games.length != 0; num += 1)
                 {
@@ -555,6 +598,9 @@ function HostStateMachine(name, password = '')
 
             // Filter out songs of the wrong difficulty
             all_games = all_games.filter(game => correctDifficulty(game, this.settings));
+
+            // Filter out songs of the wrong average rating
+            all_games = all_games.filter(game => correctRating(game, this.settings));
 
             while (games.length < this.settings.num_games && all_games.length != 0)
             {

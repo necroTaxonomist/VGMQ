@@ -3,6 +3,10 @@
 const features =
 [
     {
+        date: new Date('September 19, 2020 15:00:00'),
+        value: 'Added game ratings. Rate games from your library page or individual game pages!'
+    },
+    {
         date: new Date('September 15, 2020 20:00:00'),
         value: 'Made game name searches more accurate and responsive.'
     },

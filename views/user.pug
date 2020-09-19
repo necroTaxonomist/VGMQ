@@ -26,26 +26,40 @@ block content
     p(style={color: 'red'}) #{errortext}
 
   ul
-    each game in gamenames
+    each game in games
       li(class="gameitem")
         if user.username == currentusername
-          input(class="checkmark" type="checkbox" checked=true name=game)
-        a(href="/games/" + game) #{game}
+          input(class="checkmark" type="checkbox" checked=true name=game.game_name)
+          input(class="ratebox" type="number" min="1" max="10" value=game.ratings[currentusername] style={'width': '3em'} name=game.game_name)
+        a(href="/games/" + game.game_name) #{game.game_name}
 
   form(id="removeform" action="/users/" + currentusername + "/remove" method="POST")
     input(name="game_name" type="hidden" id="removegamename")
     input(name="source_url" type="hidden" value="/users/" + currentusername)
+  
+  form(id="rateform" action="/games/rate" method="POST")
+    input(name="game_name" type="hidden" id="rategamename")
+    input(name="username" type="hidden" value=currentusername)
+    input(name="rating" type="hidden" id="raterating")
+    input(name="source_url" type="hidden" value="/users/" + currentusername)
 
   script(src="/javascript/xhttp.js")
 
+  script(src="/javascript/xhttp.js")
   script.
+    var items = document.getElementsByClassName("gameitem");
+
     var removeform = document.getElementById("removeform");
     var removegamename = document.getElementById("removegamename");
-    var items = document.getElementsByClassName("gameitem");
+
+    var rateform = document.getElementById("rateform");
+    var rategamename = document.getElementById("rategamename");
+    var raterating = document.getElementById("raterating");
 
     for (item of items)
     {
       var checkmark = item.getElementsByClassName("checkmark")[0];
+      var ratebox = item.getElementsByClassName("ratebox")[0];
 
       if (checkmark)
       {
@@ -53,6 +67,17 @@ block content
         {
           removegamename.value = this.name;
           removeform.submit();
+        }
+      }
+
+      if (ratebox)
+      {
+        ratebox.oninput = function()
+        {
+          rategamename.value = this.name;
+          raterating.value = this.value;
+
+          xhttpAsyncForm("/games/rate", new FormData(rateform));
         }
       }
     }

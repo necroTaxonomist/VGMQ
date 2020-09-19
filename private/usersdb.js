@@ -5,10 +5,14 @@ var mongoose = require('mongoose');
 // Games database
 var gamesdb = require('../private/gamesdb');
 
+// Current user version
+const CURRENT_VERSION = 2;
+
 // User Schema
 var userSchema = new mongoose.Schema(
     {
         name: String,
+        version: Number,  // Not defaulted
         username: { type: String, index: true, unique: true, required: true },
         password: { type: String, required: true },
         wins: { type: Number, default: 0 },
@@ -35,6 +39,7 @@ function create(username, password)
 {
     return userModel.create(
         {
+            version: CURRENT_VERSION,
             username: username,
             password: password
         }
@@ -61,14 +66,28 @@ async function auth(username, password)
 }
 
 // Get the user with the given username
-// Returns a Query
-function get(username)
+// Returns a Promise
+async function get(username)
 {
-    return userModel.findOne(
-        {
-            username: username
-        }
-    );
+    // Get the user
+    var user = await userModel.findOne({ username: username });
+
+    // If the user format has changed since this user was added,
+    // we need to to a manual save to the database with the defaults
+    if (user != null && user.version != CURRENT_VERSION)
+    {
+        // Set the version
+        // The version field is not defaulted so that
+        // we pick up entries from before the field existed
+        user.version = CURRENT_VERSION;
+
+        // Save to the database
+        // This would include any defaults added
+        await user.save();
+    }
+
+    // Return the user
+    return user;
 }
 
 // Get all usernames
@@ -104,13 +123,16 @@ async function addGameToUser(game_name, username)
 // Returns a Promise
 async function removeGameFromUser(game_name, username)
 {
+    // First, unrate the game
+    await gamesdb.rate(game_name, username, 0);
+
     // Get the game to remove
     var game = await gamesdb.get(game_name);
     var game_id = game.id;
 
+    // Remove the game
     var query = { username: username };
     var update = { $pull: { games: game_id } };
-
     return userModel.findOneAndUpdate(query, update).exec();
 }
 

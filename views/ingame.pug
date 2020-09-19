@@ -14,14 +14,14 @@ block content
     input(name="num_games" id="num_games" type="number" min="1" max="100" disabled)
     br
 
-    | Game Selection
+    | Game Selection: 
     input(name="game_selection" id="gamesel_random" type="radio" value="random" checked disabled)
     | Random   
     input(name="game_selection" id="gamesel_only_played" type="radio" value="only_played" disabled)
     | Only Played
     br
 
-    | Song Selection
+    | Song Selection: 
     input(name="song_selection" id="songsel_random" type="radio" value="random" checked disabled)
     | Random  
     input(name="song_selection" id="songsel_weight_by_views" type="radio" value="weight_by_views" disabled)
@@ -34,17 +34,67 @@ block content
     input(name="guess_time" id="guess_time" type="number" min="1" max="100" disabled)
     br
 
-    | Difficulty
-    input(name="allow_easy" id="allow_easy" type="checkbox" checked disabled)
-    | Easy  
-    input(name="allow_medium" id="allow_medium" type="checkbox" checked disabled)
-    | Medium  
-    input(name="allow_hard" id="allow_hard" type="checkbox" checked disabled)
-    | Hard
-    br
+    input(name="restrict_difficulty" id="restrict_difficulty" type="checkbox" disabled)
+    | Difficulty: 
+    span(id="difficulty_span" style={opacity: '0.6'})
+      input(name="allow_easy" id="allow_easy" type="checkbox" checked disabled)
+      | Easy  
+      input(name="allow_medium" id="allow_medium" type="checkbox" checked disabled)
+      | Medium  
+      input(name="allow_hard" id="allow_hard" type="checkbox" checked disabled)
+      | Hard
+      br
+
+    input(name="restrict_ratings" id="restrict_ratings" type="checkbox" disabled)
+    | Ratings: 
+    span(id="ratings_span" style={opacity: '0.6'})
+      | Min: 
+      input(name="min_rating" id="min_rating" type="number" min="1" max="10" value="1" disabled)
+      | Max: 
+      input(name="max_rating" id="max_rating" type="number" min="1" max="10" value="10" disabled)
+      |  Allow Unrated
+      input(name="allow_unrated" id="allow_unrated" type="checkbox" checked disabled)
+      br
 
     input(id="reset_settings" type="button" value="Reset" disabled)
     input(id="submit_settings" type="button" value="Apply" disabled)
+
+  script.
+    var restrict_difficulty = document.getElementById("restrict_difficulty");
+    var difficulty_span = document.getElementById("difficulty_span");
+    var allow_easy = document.getElementById("allow_easy");
+    var allow_medium = document.getElementById("allow_medium");
+    var allow_hard = document.getElementById("allow_hard");
+
+    restrict_difficulty.onclick = function()
+    {
+      if (!this.checked)
+        difficulty_span.style = "opacity:0.6;";
+      else
+        difficulty_span.style = "opacity:1.0;";
+
+      allow_easy.disabled = !this.checked;
+      allow_medium.disabled = !this.checked;
+      allow_hard.disabled = !this.checked;
+    };
+
+    var restrict_ratings = document.getElementById("restrict_ratings");
+    var ratings_span = document.getElementById("ratings_span");
+    var min_rating = document.getElementById("min_rating");
+    var max_rating = document.getElementById("max_rating");
+    var allow_unrated = document.getElementById("allow_unrated");
+
+    restrict_ratings.onclick = function()
+    {
+      if (!this.checked)
+        ratings_span.style = "opacity:0.6;";
+      else
+        ratings_span.style = "opacity:1.0;";
+
+      min_rating.disabled = !this.checked;
+      max_rating.disabled = !this.checked;
+      allow_unrated.disabled = !this.checked;
+    };
 
   p(id="volumecontrols" hidden)
     | Volume: 

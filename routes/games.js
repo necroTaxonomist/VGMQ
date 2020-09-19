@@ -285,4 +285,40 @@ async function editGame(req, res, next)
 }
 router.post('/edit', editGame);
 
+/* POST to rate a game */
+async function rateGame(req, res, next)
+{
+    try
+    {
+        await usersdb.auth(req.session.username, req.session.password);
+
+        // Get values from the post
+        var game_name = req.body.game_name;
+        var username = req.session.username;
+        var rating = req.body.rating;
+
+        if (!await usersdb.hasGame(username, game_name))
+            throw 'Can only rate games in your library';
+
+        if (rating)
+        {
+            if (rating < 1 || rating > 10)
+                throw 'Ratings must be between 1 and 10';
+
+            if (rating % 1 != 0)
+                throw 'Ratings must be a whole number (gdi)';
+        }
+
+        await gamesdb.rate(game_name, username, rating);
+
+        res.redirect('/games/' + encodeURIComponent(new_game_name));
+    }
+    catch (err)
+    {
+        var string = encodeURIComponent(err);
+        res.redirect(req.body.source_url + '?err=' + err);
+    }
+}
+router.post('/rate', rateGame);
+
 module.exports = router;

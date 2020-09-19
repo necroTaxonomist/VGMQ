@@ -60,15 +60,6 @@ function abortGame()
 
 function showGameSettings()
 {
-    // Set the values based on lobby.settings
-    document.getElementById("num_games").value = lobby.settings.num_games;
-    document.getElementById("gamesel_" + lobby.settings.game_selection).checked = true;
-    document.getElementById("songsel_" + lobby.settings.song_selection).checked = true;
-    document.getElementById("guess_time").value = lobby.settings.guess_time;
-    document.getElementById("allow_easy").checked = lobby.settings.allow_easy;
-    document.getElementById("allow_medium").checked = lobby.settings.allow_medium;
-    document.getElementById("allow_hard").checked = lobby.settings.allow_hard;
-
     // Get the settings form
     const settings = document.getElementById("settings");
 
@@ -83,6 +74,74 @@ function showGameSettings()
     for (elem of settings.getElementsByTagName("input"))
     {
         elem.disabled = !isHost;
+    }
+
+    // Set the values based on lobby.settings
+    document.getElementById("num_games").value = lobby.settings.num_games;
+    document.getElementById("gamesel_" + lobby.settings.game_selection).checked = true;
+    document.getElementById("songsel_" + lobby.settings.song_selection).checked = true;
+    document.getElementById("guess_time").value = lobby.settings.guess_time;
+
+    // Set difficulty settings
+    var restrict_difficulty = document.getElementById("restrict_difficulty");
+    var difficulty_span = document.getElementById("difficulty_span");
+    var allow_easy = document.getElementById("allow_easy");
+    var allow_medium = document.getElementById("allow_medium");
+    var allow_hard = document.getElementById("allow_hard");
+
+    if (lobby.settings.restrict_difficulty == "on")
+    {
+        restrict_difficulty.checked = true;
+        difficulty_span.style = "opacity:1.0;";
+        allow_easy.checked = lobby.settings.allow_easy;
+        allow_medium.checked = lobby.settings.allow_medium;
+        allow_hard.checked = lobby.settings.allow_hard;
+    }
+    else
+    {
+        restrict_difficulty.checked = false;
+
+        difficulty_span.style = "opacity:0.6;";
+
+        allow_easy.checked = true;
+        allow_easy.disabled = true;
+
+        allow_medium.checked = true;
+        allow_medium.disabled = true;
+
+        allow_hard.checked = true;
+        allow_hard.disabled = true;
+    }
+
+    // Set rating settings
+    var restrict_ratings = document.getElementById("restrict_ratings");
+    var ratings_span = document.getElementById("ratings_span");
+    var min_rating = document.getElementById("min_rating");
+    var max_rating = document.getElementById("max_rating");
+    var allow_unrated = document.getElementById("allow_unrated");
+
+    if (lobby.settings.restrict_ratings == "on")
+    {
+        restrict_ratings.checked = true;
+        ratings_span.style = "opacity:1.0;";
+        min_rating.value = lobby.settings.min_rating;
+        max_rating.value = lobby.settings.max_rating;
+        allow_unrated.checked = lobby.settings.allow_unrated;
+    }
+    else
+    {
+        restrict_ratings.checked = false;
+
+        ratings_span.style = "opacity:0.6;";
+
+        min_rating.value = 1;
+        min_rating.disabled = true;
+
+        max_rating.value = 10;
+        max_rating.disabled = true;
+
+        allow_unrated.checked = true;
+        allow_unrated.disabled = true;
     }
 
     // Make the settings form visible
@@ -364,7 +423,12 @@ function showWinLosePlayers()
             li.innerText += '😢';
 
         if (player.blame)
+        {
             li.innerText += '📚';
+
+            if (player.rating)
+                li.innerText += '(' + player.rating + ')';
+        }
 
         li.innerText += ' ' + player.username;
         li.innerText += ' (' + player.points + ' points)';
