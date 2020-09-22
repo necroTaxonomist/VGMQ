@@ -161,20 +161,11 @@ function remove(name)
 }
 
 // Gets all games
-// Returns a Promise
+// Returns a Query
 async function all()
 {
     // Get all games
-    var games = await gameModel.find({}).sort('game_name');
-
-    // Fix versions
-    for (game of games)
-    {
-        await fixVersion(game);
-    }
-
-    // Return
-    return games;
+    return  gameModel.find({}).sort('game_name');
 }
 
 // Get all game names
