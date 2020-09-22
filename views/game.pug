@@ -46,8 +46,8 @@ block content
       br
       | My rating: 
       span(id="rating_display")
-        if game.ratings[currentuser.username]
-          strong #{game.ratings[currentuser.username]} 
+        if game.ratings.has(currentuser.username)
+          strong #{game.ratings.get(currentuser.username)} 
         else
           | Unrated 
         input(id="edit_rating" type="button" value="✏️" hidden=!currentuser.games.includes(game._id))
@@ -58,9 +58,9 @@ block content
       input(name="game_name" type="hidden" value=game.game_name)
       input(name="source_url" type="hidden" value="/games/" + encodeURIComponent(game.game_name))
 
-  if game.ratings[currentuser.username]
+  if game.ratings.has(currentuser.username)
     script.
-      const userRating = #{game.ratings[currentuser.username]};
+      const userRating = #{game.ratings.get(currentuser.username)};
   else
     script.
       const userRating = undefined;

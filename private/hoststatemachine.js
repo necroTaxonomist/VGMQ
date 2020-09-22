@@ -134,7 +134,6 @@ function GuessingState()
 
             // Get the current game
             const cur_game = await gamesdb.get(cur_vid.game_name);
-            console.log(cur_game);
 
             // Operations on players
             var numCorrect = 0;
@@ -172,7 +171,7 @@ function GuessingState()
                 player.blame = await usersdb.hasGame(player.username, cur_vid.game_name);
 
                 // Update the player rating (shown if blamed)
-                const rating = cur_game.ratings[player.username];
+                const rating = cur_game.ratings.get(player.username);
                 if (rating)
                     player.rating = rating;
                 else
@@ -532,12 +531,16 @@ function HostStateMachine(name, password = '')
             if (username == undefined)  // Average rating
                 rating = game.average_rating;
             else
-                rating = game.ratings[username];
+                rating = game.ratings.get(username);
 
             if (!rating)  // Not rated
             {
                 return settings.allow_unrated == 'on';
             }
+
+            console.log('rating = ' + rating);
+            console.log('min = ' + settings.min_rating);
+            console.log('max = ' + settings.max_rating);
 
             // True if in range
             return (rating >= settings.min_rating) &&

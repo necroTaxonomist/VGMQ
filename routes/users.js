@@ -11,15 +11,16 @@ async function usersListing(req, res, next)
     try
     {
         await usersdb.auth(req.session.username, req.session.password);
-
-        var usernames = await usersdb.allUsernames();
-        res.render('userlist', {usernames: usernames});
     }
     catch (err)
     {
         // Go to log in if not logged in
         res.redirect('/');
+        return;
     }
+
+    var usernames = await usersdb.allUsernames();
+    res.render('userlist', {usernames: usernames});
 }
 router.get('/', usersListing);
 
@@ -59,6 +60,7 @@ async function userPage(req, res, next)
     }
     catch (err)  // User not found
     {
+        console.log(err);
         next(createError(404));
     }
 }

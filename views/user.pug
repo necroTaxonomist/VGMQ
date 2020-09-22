@@ -30,7 +30,7 @@ block content
       li(class="gameitem")
         if user.username == currentusername
           input(class="checkmark" type="checkbox" checked=true name=game.game_name)
-          input(class="ratebox" type="number" min="1" max="10" value=game.ratings[currentusername] style={'width': '3em'} name=game.game_name)
+          input(class="ratebox" type="number" min="1" max="10" value=game.ratings.get(currentusername) style={'width': '3em'} name=game.game_name)
         a(href="/games/" + game.game_name) #{game.game_name}
 
   form(id="removeform" action="/users/" + currentusername + "/remove" method="POST")

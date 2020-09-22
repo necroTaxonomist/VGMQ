@@ -33,6 +33,28 @@ userSchema.virtual('num_games').get(
 // User Model
 var userModel = mongoose.model('user', userSchema);
 
+// Fix an entry to use the newest version
+async function fixVersion(user, doSave = true)
+{
+    if (user.null)
+        return;  // Can't fix, not a valid entry
+
+    if (user.version == CURRENT_VERSION)
+        return;  // Already good
+
+    console.log('Fixing user entry "' + user.username + '"');
+
+    // Set the version
+    // The version field is not defaulted so that
+    // we pick up entries from before the field existed
+    user.version = CURRENT_VERSION;
+
+    // Save to the database
+    // This would include any defaults added
+    if (doSave)
+        await user.save();
+}
+
 // Create a new user
 // Returns a Query
 function create(username, password)
@@ -72,19 +94,8 @@ async function get(username)
     // Get the user
     var user = await userModel.findOne({ username: username });
 
-    // If the user format has changed since this user was added,
-    // we need to to a manual save to the database with the defaults
-    if (user != null && user.version != CURRENT_VERSION)
-    {
-        // Set the version
-        // The version field is not defaulted so that
-        // we pick up entries from before the field existed
-        user.version = CURRENT_VERSION;
-
-        // Save to the database
-        // This would include any defaults added
-        await user.save();
-    }
+    // Fix the version
+    await fixVersion(user);
 
     // Return the user
     return user;

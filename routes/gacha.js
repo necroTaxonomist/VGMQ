@@ -18,6 +18,7 @@ async function getGacha(req, res, next)
     {
         // Go to log in if not logged in
         res.redirect('/');
+        return;
     }
 
     // Get the user

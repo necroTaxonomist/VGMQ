@@ -4,20 +4,31 @@ var mongoose = require('mongoose');
 // Songs database
 var songsdb = require('../private/songsdb');
 
+// Current game version
+const CURRENT_VERSION = 2;
+
 // Game Schema
 var gameSchema = new mongoose.Schema(
     {
         name: String,
+        version: Number,  // Not defaulted
         game_name: { type: String, index: true, unique: true, required: true },
         playlist_id: { type: String, required: true },
         songs: { type: [mongoose.Schema.Types.ObjectId], default: undefined },
         total_guesses: { type: Number, default: 0 },
         correct_guesses: { type: Number, default: 0 },
-        ratings: { type: mongoose.Schema.Types.Mixed, default: {} },
+        ratings:
+        {
+            type: Map,
+            of: Number,
+            default: new Map()
+        },
         blocked_ids: []  // Legacy
     },
     { collection: 'games' }
 );
+
+// Difficulty virtuals
 gameSchema.virtual('incorrect_guesses').get(function()
     {
         return this.total_guesses - this.correct_guesses;
@@ -43,27 +54,24 @@ gameSchema.virtual('easy').get(function()
         return this.correct_fraction >= .6;
     }
 );
+
+// Rating virtuals
 gameSchema.virtual('num_ratings').get(function()
     {
-        return Object.values(this.ratings).length;
+        return this.ratings.size;
     }
 );
 gameSchema.virtual('average_rating').get(function()
     {
         var sum = 0;
         var total = 0;
-
-        for (const rating of Object.values(this.ratings))
-        {
-            if (rating)  // Valid rating
+        
+        this.ratings.forEach((v, k) =>
             {
-                if (typeof rating == 'number')
-                    sum += rating;
-                else
-                    sum += parseInt(rating);
+                sum += v;
                 total += 1;
             }
-        }
+        );
 
         return (total != 0) ? (sum / total) : (0);
     }
@@ -72,6 +80,28 @@ gameSchema.virtual('average_rating').get(function()
 
 // Game Model
 var gameModel = mongoose.model('game', gameSchema);
+
+// Fix an entry to use the newest version
+async function fixVersion(game, doSave = true)
+{
+    if (game.null)
+        return;  // Can't fix, not a valid entry
+
+    if (game.version == CURRENT_VERSION)
+        return;  // Already good
+
+    console.log('Fixing game entry "' + game.game_name + '"');
+    
+    // Set the version
+    // The version field is not defaulted so that
+    // we pick up entries from before the field existed
+    game.version = CURRENT_VERSION;
+
+    // Save to the database
+    // This would include any defaults added
+    if (doSave)
+        await game.save();
+}
 
 // Create a new game
 // Returns a Promise
@@ -90,6 +120,7 @@ async function create(name, playlist_id)
     // Create the game
     var game = new gameModel(
         {
+            version: CURRENT_VERSION,
             game_name: name,
             playlist_id: playlist_id,
             songs: ids
@@ -105,14 +136,17 @@ async function create(name, playlist_id)
 }
 
 // Get the game with the given name
-// Returns a Query
-function get(name)
+// Returns a Promise
+async function get(name)
 {
-    return gameModel.findOne(
-        {
-            game_name: name
-        }
-    );
+    // Get the game
+    var game = await gameModel.findOne({ game_name: name });
+
+    // Do version fixups
+    await fixVersion(game);
+
+    // Return the game
+    return game;
 }
 
 // Remove the game with the given name
@@ -127,10 +161,20 @@ function remove(name)
 }
 
 // Gets all games
-// Returns a Query
-function all()
+// Returns a Promise
+async function all()
 {
-    return gameModel.find({}).sort('game_name');
+    // Get all games
+    var games = await gameModel.find({}).sort('game_name');
+
+    // Fix versions
+    for (game of games)
+    {
+        await fixVersion(game);
+    }
+
+    // Return
+    return games;
 }
 
 // Get all game names
@@ -274,12 +318,14 @@ async function searchNames(search, num)
 }
 
 // Converts a list of game IDs to games
-// Returns a Query
+// Returns a Promise
 async function idsToGames(ids)
 {
+    // Convert int type to ID type
     const id_objects = ids.map(x => mongoose.Types.ObjectId(x));
 
-    return await gameModel.find(
+    // Get matching games
+    var games = await gameModel.find(
         {
             _id:
             {
@@ -287,6 +333,15 @@ async function idsToGames(ids)
             }
         }
     ).sort('game_name');
+
+    // Fix versions
+    for (game of games)
+    {
+        await fixVersion(game);
+    }
+
+    // Return
+    return games;
 }
 
 // Informs the database that a given video ID should not play in game

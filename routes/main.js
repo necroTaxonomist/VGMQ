@@ -15,6 +15,7 @@ async function mainPage(req, res, next)
     {
         // Go to log in if not logged in
         res.redirect('/');
+        return;
     }
 
     try
