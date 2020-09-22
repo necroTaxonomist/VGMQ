@@ -56,7 +56,7 @@ async function gamesListing(req, res, next)
     var currentuser = await usersdb.get(req.session.username);
 
     // Get all the games in the database
-    var games = await gamesdb.all();
+    var games = await gamesdb.allFast();
     
     // Apply custom sort
     games = games.sort(function(a, b)

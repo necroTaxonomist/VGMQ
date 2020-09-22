@@ -137,13 +137,14 @@ async function create(name, playlist_id)
 
 // Get the game with the given name
 // Returns a Promise
-async function get(name)
+async function get(name, fix = true)
 {
     // Get the game
     var game = await gameModel.findOne({ game_name: name });
 
     // Do version fixups
-    await fixVersion(game);
+    if (fix)
+        await fixVersion(game);
 
     // Return the game
     return game;
@@ -161,11 +162,35 @@ function remove(name)
 }
 
 // Gets all games
-// Returns a Query
-async function all()
+// Returns a Promise
+async function all(fix = true)
 {
     // Get all games
-    return  gameModel.find({}).sort('game_name');
+    var games = await gameModel.find({}).sort('game_name');
+
+    // Fix versions
+    if (fix)
+    {
+        for (game of games)
+        {
+            await fixVersion(game);
+        }
+    }
+    
+
+    // Return
+    return games;
+}
+
+// Gets all games, excluding slow fields
+// Returns a Query
+function allFast()
+{
+    // Select parameter to exclude slow fields
+    const param = '-songs';
+
+    // Get all games
+    return gameModel.find({}).select(param).sort('game_name');
 }
 
 // Get all game names
@@ -310,7 +335,7 @@ async function searchNames(search, num)
 
 // Converts a list of game IDs to games
 // Returns a Promise
-async function idsToGames(ids)
+async function idsToGames(ids, fix = true)
 {
     // Convert int type to ID type
     const id_objects = ids.map(x => mongoose.Types.ObjectId(x));
@@ -326,9 +351,12 @@ async function idsToGames(ids)
     ).sort('game_name');
 
     // Fix versions
-    for (game of games)
+    if (fix)
     {
-        await fixVersion(game);
+        for (game of games)
+        {
+            await fixVersion(game);
+        }
     }
 
     // Return
@@ -446,6 +474,7 @@ module.exports =
     get,
     remove,
     all,
+    allFast,
     allNames,
     idsToNames,
     searchNames,
