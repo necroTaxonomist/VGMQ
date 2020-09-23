@@ -3,6 +3,10 @@
 const features =
 [
     {
+        date: new Date('September 23, 2020 15:00:00'),
+        value: "You can now visit other users' library pages to view their game ratings."
+    },
+    {
         date: new Date('September 22, 2020 10:30:00'),
         value: 'Restrict by rating is functional now probably.'
     },

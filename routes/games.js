@@ -134,7 +134,15 @@ async function gamePage(req, res, next)
         // so some entries need to be updated
         if (game.songs == undefined)
         {
-            game = await gamesdb.updateSongs(game_name);
+            try
+            {
+                // This might fail if the entry is malformed
+                game = await gamesdb.updateSongs(game_name);
+            }
+            catch (e)
+            {
+                // Do nothing
+            }
         }
 
         // Get all the songs for the game
