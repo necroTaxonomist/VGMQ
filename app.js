@@ -12,6 +12,7 @@ var mainRouter = require('./routes/main');
 var gamesRouter = require('./routes/games');
 var lobbyRouter = require('./routes/lobby');
 var gachaRouter = require('./routes/gacha');
+var devRouter = require('./routes/dev');
 
 var app = express();
 
@@ -37,6 +38,7 @@ app.use('/main', mainRouter);
 app.use('/games', gamesRouter);
 app.use('/lobby', lobbyRouter);
 app.use('/gacha', gachaRouter);
+app.use('/dev', devRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

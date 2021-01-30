@@ -3,6 +3,10 @@
 const features =
 [
     {
+        date: new Date('January 30, 2021 10:00:00'),
+        value: "Added download links for the users, games, and songs databases. Available under Developer Tools."
+    },
+    {
         date: new Date('September 23, 2020 15:00:00'),
         value: "You can now visit other users' library pages to view their game ratings."
     },

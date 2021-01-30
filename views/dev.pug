@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  a(href="/main") Back to main page
+
+  h2 Developer Tools
+
+  h3 Download Databases
+  ul
+    li
+      | Users Database: 
+      a(href="/dev/users.json" download) users.json
+    li
+      | Games Database: 
+      a(href="/dev/games.json" download) games.json
+    li
+      | Songs Database: 
+      a(href="/dev/songs.json" download) songs.json
+      |  (Optional, but contains disallowed song data)
