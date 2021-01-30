@@ -145,6 +145,23 @@ async function get(name, fix = true)
     // Do version fixups
     if (fix)
         await fixVersion(game);
+    
+    // If the first song entry is missing, assume the songs databse was dropped
+    if (game.songs)
+    {
+        var firstId = game.songs[0];
+        try
+        {
+            var song = await songsdb.findOne(firstId);
+            if (song == null)
+                throw "It's null.";
+        }
+        catch (err)
+        {
+            console.log("Songs missing for " + name + ", updating songs");
+            return await getUpdatedSongs(game);
+        }
+    }
 
     // Return the game
     return game;
@@ -176,7 +193,6 @@ async function all(fix = true)
             await fixVersion(game);
         }
     }
-    
 
     // Return
     return games;
@@ -382,6 +398,15 @@ async function updateSongs(game_name)
 {
     // Get the game
     var game = await get(game_name);
+
+    return await getUpdatedSongs(game);
+}
+
+// Returns a promise
+async function getUpdatedSongs(game)
+{
+    // Get the game name
+    var game_name = game.game_name;
 
     // Create all the songs on the playlist
     var songs = await songsdb.createFromPlaylistId(game.playlist_id);
